@@ -1,0 +1,6 @@
+[submodule "cascade-cpp"]
+	path = cascade-cpp
+	url = https://github.com/brunorijsman/cascade-cpp.git
+[submodule "cvqkd-reconciliation"]
+	path = cvqkd-reconciliation
+	url = https://github.com/uoy-research/cvqkd-reconciliation.git
