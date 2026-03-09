@@ -1,0 +1,13 @@
+[project]
+name = "quantum-error-correction-codes-comparison-copy"
+version = "0.1.0"
+description = "Comparing LDPC and CASCADE for LEO CubeSat GMCS CV-QKD"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=7.2.0",
+    "matplotlib>=3.10.8",
+    "matplotlib-inline>=0.2.1",
+    "numpy>=2.4.2",
+    "pandas>=3.0.1",
+]
