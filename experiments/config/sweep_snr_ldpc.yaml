@@ -1,13 +1,13 @@
-experiment_name: "snr_sweep_ed_compare"
+experiment_name: "snr_sweep_0_to_7_5_1000frames_per_point"
 seed: 123
 # Option A: explicit list
 # snr_points: [0.001, 0.01, 0.1, 0.5, 1.0, 2.0]
 # Option B: geometric range (start, end, step_factor)
 snr:
   start: 0.0001
-  end: 0.1
-  step_factor: 1.5
-frames_per_point: 1000
+  end: 7.5
+  step_factor: 1.1
+frames_per_point: 10000
 ldpc:
   binary: "cvqkd-reconciliation/build/ldpc_experiment"
   b_matrices_dir: "cvqkd-reconciliation/data/B_matrices"

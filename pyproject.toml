@@ -10,4 +10,6 @@ dependencies = [
     "matplotlib-inline>=0.2.1",
     "numpy>=2.4.2",
     "pandas>=3.0.1",
+    "pyyaml>=6.0.3",
+    "scipy>=1.17.1",
 ]
