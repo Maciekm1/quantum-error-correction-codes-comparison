@@ -64,6 +64,20 @@
 \usepackage[scaled]{helvet}
 \renewcommand\familydefault{\sfdefault} 
 \usepackage[T1]{fontenc}
+\usepackage{amsmath}
+
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinestyle{appendixcode}{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
 
 \pagestyle{headings}
 \renewcommand{\partpagestyle}{empty}

@@ -42,7 +42,7 @@ Structure:
     \item Summary of results - Key quantitative results and trade-offs.
     \item Conclusions and future work – Best algorithm under CubeSat constraints; implications for next-gen missions.
 \end{itemize}
-This is how you cite something \cite{zobel2015writing}
+This is how you cite something \cite{grosshans_continuous_2002}
 \end{summary}
 
 \begin{ethics}
@@ -53,178 +53,1064 @@ confidentiality - not sensitive data, collaboration between physics and comp sci
 
 \chapter{Introduction}
 \label{cha:Introduction}
-Overview of LEO CubeSat communication challenges.
 
-SPOQC mission introduction?
+\section{Context and Motivation}
+\label{sec:intro-context}
 
-Why error correction is vital (signal degradation, bandwidth, QKD constraints).
+Data security plays a vital role in modern communications by ensuring that a potential
+adversary (Eve) is incapable of gaining access to sensitive information. It is theoretically
+possible to secure information using encryption, where a secret key is used to transform
+data into an unreadable format that can only be recovered with the same key; for this
+exchange to remain secure, both the transmitter (Alice) and the receiver (Bob) must
+establish a shared secret key without Eve gaining any knowledge of it
+\cite{mackay_information_nodate}.
 
-Brief mention of LDPC vs CASCADE trade-offs, as well as DV-QKD vs CV-QKD (more in literature review)
+Quantum Key Distribution (QKD) provides a method for establishing these secret keys
+with information-theoretic security based on quantum mechanics laws; unlike classical
+cryptographic methods, secret keys are established using quantum states, and the
+presence of an eavesdropper can be detected through disturbances introduced into those
+states \cite{grosshans_continuous_2002}. There are two primary variants of QKD:
+discrete-variable (DV) and continuous-variable (CV)
+\cite{laudenbach_continuous-variable_2018}. Although DV-QKD typically requires specialized
+hardware such as single-photon counters, CV-QKD utilizes standard telecommunication
+components and coherent detection techniques, making it significantly easier to integrate
+into existing fibre and free-space networks \cite{laudenbach_continuous-variable_2018}.
 
-Project aim + success criteria. (Produce a robust analysis of algorithmic performance under constraints)
+A major practical challenge for QKD is scale. Terrestrial fibre-based systems experience
+distance-dependent attenuation that limits achievable range without trusted relay nodes or
+quantum repeater architectures that remain challenging to deploy at scale
+\cite{lauterbach_study_2023}. Independent link-budget analyses likewise suggest that
+ground-only free-space quantum links are often loss-limited to the order of hundreds of
+kilometres, motivating space-based range extension \cite{neumann_quantum_2017, podmore_qkd_2021}.
+Satellite links, particularly in Low Earth Orbit (LEO), are therefore a strategically important
+route towards global quantum-secure networking \cite{oi_cubesat_2017, lauterbach_study_2023, alvaro_space_2025}.
+They can bridge intercontinental distances with only one intermediate trusted element and support
+key distribution across regions that are otherwise difficult to connect \cite{podmore_qkd_2021}.
 
-Scope and limitations.
+Within this context, CubeSats are attractive because they substantially reduce mission cost
+and development barriers compared to conventional spacecraft \cite{oi_cubesat_2017, bouzoukis_overview_2025}.
+Representative quantum-communications CubeSat concepts aim to consolidate payload and bus
+hardware within envelopes on the order of $10~\mathrm{kg}$ total mass and a few litres of
+volume \cite{oi_cubesat_2017}. However, CubeSats impose strict size, weight, and power (SWaP)
+constraints - constraints that recur in satellite QKD payload roadmaps \cite{sivasankaran_cubesat_2022} - limited
+onboard compute, finite memory, and time-varying link conditions. These constraints interact
+directly with the post-processing stages of QKD, and especially with information
+reconciliation (IR), where legitimate users must correct mismatches between their correlated
+raw keys over an authenticated classical channel
+\cite{laudenbach_continuous-variable_2018, mueller_performance_2025}.
 
-Dissertation structure summary.
+The specific mission context for this dissertation is SPOQC (Satellite Platform for
+Optical Quantum Communications), the Quantum Communications Hub's 12U CubeSat
+scheduled to demonstrate in-orbit QKD from space to the Hub Optical Ground Station
+(HOGS), located at the Heriot-Watt campus in Edinburgh, Scotland
+\cite{noauthor_hubs_nodate, simmons_hogs_2025}. SPOQC is intended to demonstrate two different approaches to QKD using a dual quantum payload with corresponding receivers at HOGS
+\cite{noauthor_hubs_nodate}. 
+% Practical CV-QKD systems also rely on classical
+% post-processing stages such as information reconciliation \cite{laudenbach_continuous-variable_2018},
+% while the Hub describes supplementary radio-frequency (RF) communications alongside the
+% optical quantum link between the satellite and HOGS \cite{noauthor_hubs_nodate}.
+% Industrial satQKD discussions also highlight that the free-space quantum channel is only a
+% small fraction of the engineering effort in an end-to-end, service-oriented system \cite{alvaro_space_2025}.
+
+This dissertation is motivated by a practical systems question: even when a reconciliation
+algorithm is theoretically sound, is it operationally suitable for a CV-QKD CubeSat mission under realistic LEO constraints?
+
+\section{Problem Statement}
+\label{sec:intro-problem}
+
+Although both DV-QKD and CV-QKD are actively studied for space deployment, this
+dissertation focuses on CV-QKD because it aligns with the practical engineering direction
+of telecom-compatible hardware and coherent detection in constrained systems
+\cite{laudenbach_continuous-variable_2018}. However, this practical advantage introduces
+a demanding post-processing burden: information reconciliation in CV-QKD can become
+the dominant bottleneck in low-SNR or high-noise operating regions characteristic of
+long-range free-space links \cite{milicevic_quasi-cyclic_2018, gumus_novel_2021}.
+
+The literature contains substantial work on individual reconciliation techniques, including
+interactive CASCADE-style protocols and one-way LDPC-based coding approaches.
+However, there is comparatively limited evidence focused on direct, application-specific
+comparison between these families for LEO CubeSat CV-QKD under high-noise and
+low-signal operating conditions, with explicit attention to reverse reconciliation and
+mission feasibility \cite{mueller_performance_2025}. This gap is practically important
+because protocol decisions at the reconciliation stage significantly affect final key
+viability, classical communication overhead, and real-world deployability.
 
 \section{Research Question}
 \label{sec:research-question}
 
-Specific research questions that I will answer here. e.g.
-
-This study aims to address the following research question:
+This study aims to address the following primary research question:
 
 \begin{quote}
-\textit{Under a variety of realistic practical constraints, which error correction algorithm - LDPC or CASCADE - provides optimal performance for CubeSat-based CV-QKD?}
+\textit{Under a variety of realistic practical constraints, which error correction algorithm - LDPC-based
+one-way reconciliation or CASCADE-style interactive reconciliation - provides optimal performance-feasibility trade-off for CubeSat-based CV-QKD?}
 \end{quote}
 
-(Communication bandwidth, SWaP, SNR)
-Formulate the working hypothesis and outline how this question will guide subsequent experimental design and evaluation.
+To make this question researchable, we also addresses the following:
+\begin{itemize}
+    \item How do LDPC and CASCADE compare on reconciliation efficiency and residual
+    error rate across the low-to-high SNR range relevant to LEO CV-QKD?
+    \item How does CASCADE's sequential round-trip interaction pattern compare to
+    LDPC's one-way syndrome scheme under a realistic LEO pass-duration and RF
+    classical bandwidth budget?
+    \item Which algorithm is feasible on a constrained CubeSat processor, and at
+    what SNR operating point?
+\end{itemize}
 
-Is this the only question? Can't think of anything else atm.
+\section{Aim and Objectives}
+\label{sec:intro-aim-objectives}
 
-\begin{figure}[htb]
-\begin{center}
-\includegraphics[height=3cm]{"./UOY-Logo-Stacked-shield-Black"}
-\end{center}
-\caption{A figure containing UoY logo and its caption.}
-\end{figure}
+The aim of this dissertation is to compare LDPC and CASCADE for reverse-reconciliation
+CV-QKD in a representative LEO CubeSat scenario and determine which offers the better
+performance-feasibility trade-off under realistic mission constraints.
 
-\begin{table}[htb]
-\caption{ A table with its caption.}
-\begin{center}
-\begin{tabular}{|p{0.3\textwidth}|p{0.6\textwidth}|}
-\hline
-column A & column B \\\hline
-row 1 &
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque quis quam at nisi iaculis aliquet vel et quam. \\\hline
-row 2 &
-Aliquam erat volutpat. Nam at velit a risus faucibus aliquet. Aenean egestas vehicula mi, quis rhoncus sem facilisis in. Interdum et malesuada fames ac ante ipsum primis in faucibus. Sed lobortis lacus quis mauris rutrum auctor. \\\hline
-\end{tabular}
-\end{center}
-\end{table}
+\textbf{Objectives.}
+\begin{enumerate}
+    \item Establish the technical background required for CubeSat-based CV-QKD and
+    information reconciliation.
+    \item Review the state of the art on LDPC, CASCADE, and prior comparative studies,
+    and identify the gap relevant to LEO CubeSat deployment.
+    \item Evaluate both algorithms under matched operating conditions using a shared
+    simulation and metric framework.
+    \item Translate the measured results into system-level feasibility criteria covering
+    communication, latency, compute, and memory.
+    \item Produce a final feasibility assessment and mission-oriented recommendation.
+\end{enumerate}
 
-\chapter{Background and Literature Review}
+\section{Scope, Delimitations, and Contribution}
+\label{sec:intro-scope}
+
+This dissertation is limited to the information reconciliation stage of reverse-reconciliation
+CV-QKD in a LEO CubeSat context. It does not attempt a full spacecraft design, detailed
+optical link modelling, or full end-to-end cryptographic integration.
+
+Its contribution is to provide:
+\begin{itemize}
+    \item a focused review of reconciliation methods relevant to constrained space-based
+    CV-QKD;
+    \item a matched-condition comparison of LDPC and CASCADE;
+    \item a first-order feasibility model linking algorithm behaviour to LEO CubeSat
+    mission constraints.
+\end{itemize}
+\section{Dissertation Structure}
+\label{sec:intro-structure}
+
+Chapter ~\ref{cha:background} introduces prerequisite knowledge.
+Chapter~\ref{cha:literature} reviews the theoretical and applied literature required to
+position the research problem.
+Chapter~\ref{cha:methodology} defines the methodological framework used to
+evaluate the algorithms empirically. 
+Chapter~\ref{cha:results} presents and analyses the results. 
+Chapter~\ref{cha:conclusion} concludes with a direct answer to the research
+question, practical implications, and directions for future work.
+
+% =========================================================
+\chapter{Background}
 \label{cha:background}
+% =========================================================
 
+% ---------------------------------------------------------
 \section{CubeSat Communication Systems}
-\label{sec:cubesat-comm}
-Constraints, SWaP (Size, Weight, and Power) limitations, and typical communication architectures used in CubeSats.
-Discuss hardware bottlenecks, onboard processing restrictions and anything else I can find
+\label{sec:bg-cubesat}
+% ---------------------------------------------------------
 
-\section{Quantum Key Distribution in LEO}
-\label{sec:qkd-leo}
-Overview of QKD implementation in Low Earth Orbit.
-Explain the basics of photon transmission, polarization, and measurement.
-Highlight why error correction is critical in maintaining key integrity over noisy optical channels.
+CubeSats are standardised small satellites built from multiples of a
+$10 \times 10 \times 10\,\text{cm}$ unit (1U) \cite{oi_cubesat_2017}. Their
+main advantage is cost and accessibility: compared with conventional spacecraft,
+they reduce development time and launch cost and are widely used for Earth
+observation, communications, technology demonstration, and scientific missions
+\cite{oi_cubesat_2017, bouzoukis_overview_2025}. This has made them an important
+platform for early-stage space communications research.
 
-Would I consider DV-QKD or CV-QKD and would it be worth making a new section on this?
+Their engineering constraints are equally important. CubeSats operate within
+tight size, weight, and power (SWaP) budgets, which limit payload volume,
+antenna size, power availability, thermal control, shielding, onboard memory,
+and processor capability \cite{oi_cubesat_2017, sivasankaran_cubesat_2022}. In
+communication-intensive missions, these limits directly affect what can be
+generated, stored, processed, and transmitted onboard.
 
-New section: Using CV-QKD because SPOQC mission
+LEO operation makes these constraints time-critical. A satellite in LEO has
+short and intermittent contact opportunities with a fixed ground station, so
+communication occurs in limited pass windows rather than continuously
+\cite{oi_cubesat_2017, jordan-parra_evaluation_2024}. During a pass, link quality
+changes with elevation angle, atmospheric path length, antenna geometry, and
+pointing accuracy \cite{jordan-parra_evaluation_2024}. As a result, mission
+performance depends not only on payload capability but on whether data handling
+and communications can be completed within the available visibility window.
 
-\section{Error Correction Algorithms Overview}
-\label{sec:error-correction}
-Theoretical principles of LDPC and CASCADE algorithms.
-Include equations or diagrams as necessary to explain parity-check matrices (for LDPC) and iterative reconciliation (for CASCADE).
+This is especially relevant to QKD missions. Space QKD requires both a quantum
+optical link and a classical communication link, so mission viability depends on
+more than optical transmission alone. Any candidate post-processing method must
+fit within practical limits on pass duration, bandwidth, latency, onboard
+compute, and memory. These constraints are particularly visible on 6U--12U
+platforms, where a protocol that is feasible on a larger spacecraft may not
+remain feasible on a CubeSat \cite{oi_cubesat_2017, simmons_hogs_2025}. For this
+reason, CubeSats are not simply scaled-down satellites; they are a more
+constrained operating environment in which trade-offs between algorithmic
+performance and system feasibility become explicit.
 
-Which one is implemented and which one will I need to implement?
+% ---------------------------------------------------------
+\section{Information Theory}
+\label{sec:bg-info-theory}
+% ---------------------------------------------------------
 
-\section{Discrete Variable QKD vs Continuous Variable QKD}
-\label{sec:qkd-leo}
+% The communication constraints described for CubeSat missions motivate the use of
+% information theory as the framework for analysing error correction, communication
+% overhead, and practical reconciliation limits. 
+Information theory, established by
+Claude Shannon, formalises how uncertainty is quantified, how noise affects communication,
+and how much information must be exchanged to recover a message reliably
+\cite{mackay_information_nodate}.
 
-Discuss the differences between DV-QKD and CV-QKD found in literature, explain why we are using CV-QKD.
+A central quantity is \textit{entropy}, which measures uncertainty in a random variable.
+For a binary variable with error probability $p$, the binary entropy function is
+\begin{equation}
+H_2(p) = -p \log_2 p - (1-p)\log_2(1-p).
+\end{equation}
+In reconciliation, $H_2(p)$ gives the asymptotic lower bound on the amount of
+information that must be revealed to correct errors on a binary symmetric channel
+\cite{mackay_information_nodate}. This is directly relevant to QKD because every
+bit revealed during reconciliation is assumed to be known to an eavesdropper and
+therefore reduces the final secret-key length.
 
-\section{Comparative Studies and Research Gaps}
-\label{sec:comparative-studies}
-Summarize findings from key references.
-Identify the lack of direct comparisons between LDPC and CASCADE under CubeSat constraints such as limited bandwidth and computational power? 
-Only 1 or 2 publications I could find comparing the two algorithms
+Information theory also formalises the concept of a \textit{channel}: the medium over
+which information is transmitted. Real channels are noisy, so received symbols may differ
+from transmitted ones because of attenuation, interference, or detector noise. The
+maximum reliable communication rate of such a channel is its \textit{capacity}
+\cite{mackay_information_nodate}. Any practical reconciliation method must therefore
+balance three competing requirements: low information leakage, reliable correction, and
+implementability under finite communication and compute budgets.
 
-cutting edge LDPC use FPGA implementations which are inaccessible for low budget / need specialist. Figure out the implications of CPU only use case.
+In binary QKD settings, the post-sifting channel is often approximated as a binary
+symmetric channel (BSC), in which each bit is independently flipped with probability $p$.
+In CV-QKD, the underlying physical channel is instead continuous-valued and is more
+naturally represented by a Gaussian noise model \cite{laudenbach_continuous-variable_2018}.
+This distinction matters because it changes both how errors are represented and which
+reconciliation techniques are suitable. In particular, CV-QKD can provide soft reliability
+information that one-way codes such as LDPC can exploit, whereas interactive protocols
+such as CASCADE operate only on hard binary decisions
+\cite{leverrier_multidimensional_2008, milicevic_quasi-cyclic_2018}.
 
-\chapter{Methodology and Design}
+Within this dissertation, two broad classes of error-correction approach are relevant.
+The first is \textit{syndrome-based} reconciliation, in which one party transmits a
+compressed parity description derived from an error-correcting code and the other uses
+that syndrome together with its own noisy data to decode. This is the basis of LDPC-based
+reconciliation. The second is \textit{interactive} reconciliation, in which the parties
+exchange multiple parity-based messages to locate and correct errors iteratively; CASCADE
+is the standard example \cite{martinez-mateo_demystifying_2015, reis_quantum_2019}.
+
+These two approaches represent different information-theoretic and systems trade-offs.
+Syndrome-based reconciliation uses compact one-way communication but requires more local
+decoding effort. Interactive reconciliation can be effective and conceptually simple, but
+its cost grows with the number of messages and communication rounds
+\cite{mueller_performance_2025}. In the CubeSat setting introduced in the previous
+section, this distinction is critical: one-way methods are more likely to be limited by
+compute, whereas interactive methods are more likely to be limited by latency and
+sequential communication overhead.
+
+% ---------------------------------------------------------
+\section{Quantum Key Distribution}
+\label{sec:bg-qkd}
+% ---------------------------------------------------------
+
+Quantum Key Distribution (QKD) is a method for establishing a shared secret key
+between two legitimate parties, conventionally Alice and Bob, using quantum
+states as information carriers. Its significance is that security can be based
+on the physical properties of quantum mechanics rather than only on
+computational assumptions. In particular, any attempt by an eavesdropper to
+measure the transmitted quantum states introduces detectable disturbance
+\cite{grosshans_continuous_2002, laudenbach_continuous-variable_2018}. QKD is
+therefore attractive for long-term secure communications in settings where
+classical public-key assumptions may become vulnerable.
+
+\subsection{DV-QKD and CV-QKD}
+\label{subsec:bg-dv-cv}
+
+The two main families of QKD are discrete-variable (DV) and continuous-variable
+(CV) QKD. DV-QKD encodes information in discrete quantum states, such as photon
+polarisation or phase, and typically relies on single-photon detectors. These
+systems have enabled many important demonstrations, but their detector
+requirements can be difficult to accommodate on constrained satellite
+platforms. CV-QKD instead encodes information in the continuous quadrature
+amplitudes of coherent states and measures them using coherent detection, such
+as homodyne or heterodyne detection. This makes CV-QKD attractive from an
+engineering perspective because it uses standard telecom-compatible optical
+components and avoids the detector infrastructure associated with DV-QKD
+\cite{laudenbach_continuous-variable_2018}.
+
+\subsection{GMCS CV-QKD}
+\label{subsec:bg-gmcs}
+
+This dissertation focuses on Gaussian-Modulated Coherent-State (GMCS) CV-QKD.
+In GMCS protocols, Alice modulates coherent states according to a Gaussian
+distribution and Bob measures them using homodyne detection
+\cite{grosshans_continuous_2002, grosshans_quantum_2003}. GMCS is relevant here
+because it provides a practical CV-QKD implementation based on standard
+coherent laser states and homodyne detection, avoiding the need for squeezed or
+entangled light. It also supports high-speed detection and multi-bit-per-pulse
+Gaussian modulation, which can enable higher secret-key rates in suitable
+operating regimes \cite{grosshans_quantum_2003}. For a constrained space system,
+these properties make GMCS a practical engineering choice.
+
+\subsection{The CV-QKD Process}
+\label{subsec:bg-cvqkd-process}
+
+A simplified CV-QKD pipeline consists of six stages. First, Alice prepares and
+transmits Gaussian-modulated coherent states. Second, Bob performs coherent
+detection and obtains a noisy continuous-valued sequence. Third, a subset of
+the data is used for parameter estimation to characterise the channel and
+detect suspicious excess noise. Fourth, the continuous observations are mapped
+into a form suitable for binary correction, commonly using multidimensional
+reconciliation \cite{leverrier_multidimensional_2008}. Fifth, an information
+reconciliation protocol removes mismatches between Alice's and Bob's correlated
+keys. Sixth, privacy amplification compresses the reconciled key to remove any
+information revealed through noise estimation and public communication.
+
+This structure is important because, unlike DV-QKD, CV-QKD does not produce a
+binary raw key directly. The continuous-valued measurements must first be
+processed into a binary representation before conventional error correction can
+be applied. That extra preprocessing stage is one of the reasons reconciliation
+becomes particularly demanding in CV-QKD.
+
+\subsection{Direct and Reverse Reconciliation}
+\label{subsec:bg-dr-rr}
+
+In direct reconciliation, Bob corrects his data to match Alice; in reverse
+reconciliation, Alice corrects her data to match Bob. For CV-QKD in high-loss
+channels, reverse reconciliation is the practically relevant choice because it
+can maintain positive key generation even when direct reconciliation fails
+\cite{grosshans_continuous_2002, grosshans_quantum_2003}. This is especially
+important for space-to-ground links, where free-space loss can be substantial.
+
+In the scenario studied here, Bob corresponds to the optical ground station and
+Alice to the satellite. Under reverse reconciliation, Bob measures the received
+quantum states, computes the side information needed for reconciliation, and
+sends that information to Alice. This fixes both the direction of the classical
+communication and the location of the decoding task.
+
+\subsection{Why Information Reconciliation Matters Here}
+\label{subsec:bg-ir-role}
+
+This dissertation focuses on the information reconciliation stage because it is
+the point where information theory, CV-QKD, and CubeSat constraints intersect.
+Reconciliation determines how much classical communication must be exchanged,
+how much information is leaked publicly, and how much computation is required to
+obtain matching keys. In a constrained LEO CubeSat mission, these factors
+directly affect whether a protocol is operationally feasible \cite{mueller_performance_2025}.
+
+\section{Summary of Background}
+\label{sec:bg-summary}
+
+This chapter has established the prerequisite knowledge needed for the rest of
+the dissertation. CubeSat platforms are attractive for low-cost space
+communications but impose strong operational constraints. Information theory
+provides the formal tools for reasoning about noisy channels, leakage, and
+error correction. QKD, and in particular reverse-reconciliation GMCS CV-QKD,
+provides the application context in which these ideas are brought together. The
+next chapter reviews the literature on space QKD, Cascade, LDPC, and prior
+comparative studies, and identifies the gap this dissertation aims to address.
+
+% =========================================================
+\chapter{Literature Review}
+\label{cha:literature}
+% =========================================================
+
+\section{Space QKD and CubeSat Context}
+\label{sec:lit-space}
+
+Satellite QKD is motivated by the distance limitations of terrestrial optical
+fibre. While fibre-based QKD is effective over metropolitan and inter-city
+scales, global secure communication requires methods that avoid the high
+attenuation of long fibre links. Free-space optical channels therefore provide
+an important route towards long-distance quantum-secure communication
+\cite{lauterbach_study_2023}.
+
+A major milestone in this area was the \textit{Micius} satellite, which
+demonstrated long-distance satellite-to-ground QKD, at a distance of up to 1200km, and established the
+practical viability of space-based quantum links
+\cite{lauterbach_study_2023, lu_micius_2022}. It was the world's first quantum satellite mission, and although it differed significantly from a regular CubeSat platform, weighing over 600kg,it showed that quantum communication can be sustained over free-space paths far beyond the range typically achievable in fibre.
+
+CubeSat-oriented work instead considers whether space QKD can be realised
+within the mass, volume, power, and operational limits of a nanosatellite.
+The CQuCoM concept makes these constraints explicit through a 6U CubeSat in
+an approximately 10\,kg, 6\,L envelope, with platform power around 11\,W, a
+30\,Wh battery, a 90\,mm transmit telescope, and quantum passes limited to
+night-time eclipse opportunities of about 6 minutes on average
+\cite{oi_cubesat_2017}. This shows that feasibility depends not only on the
+optical protocol, but also on whether pointing, power storage, and pass
+duration can be made compatible with quantum transmission. QEYSSat addresses
+the same problem from a different systems perspective. It uses a LEO
+trusted-node architecture with the satellite primarily as a receiver for
+ground-to-space uplinks, shifting source complexity and much of the processing
+burden to the ground segment \cite{podmore_qkd_2021}.
+
+These studies establish the feasibility and strategic relevance of space QKD,
+but they do not directly answer how a resource-constrained CubeSat should
+select a reconciliation strategy when compute, memory, bandwidth, and latency
+are treated as mission-level constraints.
+\cite{jordan-parra_evaluation_2024}.
+
+This issue is especially important for SPOQC, which provides a concrete
+CubeSat-oriented CV-QKD mission context. Because CV-QKD requires continuous
+measurement outcomes to be converted into shared binary secret keys, the
+choice of reconciliation protocol becomes a central systems question. Recent
+SPOQC/HOGS material indicates losses of up to around 50~dB and key rates on
+the order of 100~bits/s, suggesting that mission feasibility may depend not
+only on optical performance but also on the cost and behaviour of the
+reconciliation stage \cite{noauthor_hubs_nodate, simmons_hogs_2025}.
+
+\section{Information Reconciliation Approaches}
+\label{sec:lit-reconciliation}
+
+The literature on QKD reconciliation is dominated by two broad approaches:
+interactive protocols such as CASCADE, and code-based protocols such as LDPC.
+Both are mature and widely studied, but they embody different trade-offs in
+efficiency, communication structure, and computational cost \cite{martinez-mateo_demystifying_2015}.
+
+CASCADE remains one of the best-known reconciliation protocols in QKD. Its
+appeal lies in its conceptual simplicity: errors are located through repeated
+block partitioning, parity comparison, and binary search
+\cite{martinez-mateo_demystifying_2015, reis_quantum_2019}. Because its
+operations are explicit and message-based, CASCADE is comparatively easy to
+implement and analyse. The literature shows that many optimised variants exist,
+but the main point for this dissertation is that CASCADE is fundamentally a
+highly interactive protocol whose communication cost and leakage depend
+strongly on channel conditions and configuration choices
+\cite{reis_quantum_2019, tupkary_using_2023}.
+
+Its strengths are best established for binary-QKD channels at moderate QBER,
+where it remains reasonably efficient and reliable in practice. For example,
+Mart\'inez-Mateo et al.\ report reconciliation efficiencies of approximately
+$f_{\mathrm{EC}} = 1.09013$ at $Q=2\%$ and $f_{\mathrm{EC}} = 1.09541$ at
+$Q=5\%$, supporting the view that leakage can remain manageable in this low-noise regime
+\cite{martinez-mateo_demystifying_2015}.
+CASCADE, however, is highly interactive and may require many communication rounds, with
+the same study showing tens to over a hundred channel uses for $10^4$-bit
+frames depending on QBER and protocol configuration
+\cite{martinez-mateo_demystifying_2015}. This becomes more problematic as
+the SNR decreases, since improved efficiency often comes at the cost of
+substantially greater interaction \cite{martinez-mateo_demystifying_2015}. 
+That trade-off is particularly
+relevant here because low-SNR CV-QKD, after preprocessing, may produce
+effective binary channels in regimes where communication overhead and leakage
+are major practical costs rather than secondary concerns.
+
+LDPC-based reconciliation takes a different approach. Instead of repeated
+two-way parity exchange, it uses one-way syndrome transmission and local
+iterative decoding. This makes LDPC attractive because it can approach
+Shannon-limit performance while reducing classical communication overhead. In
+CV-QKD, LDPC is especially prominent because it can make use of soft
+information derived from the physical channel, making it well suited to
+multidimensional reconciliation and other low-SNR settings
+\cite{leverrier_multidimensional_2008, milicevic_quasi-cyclic_2018}.
+
+As with CASCADE, the literature contains many LDPC variants, including blind
+and rate-adaptive methods designed to cope with uncertain or changing channel
+conditions \cite{gumus_novel_2021, mueller_performance_2025}. For the present LEO CubeSat scenario,however,
+all the variations share a common profile: LDPC can offer high reconciliation efficiency
+with low communication overhead, but good performance often depends on code
+selection, large block lengths, and sufficient computational resources for
+iterative decoding \cite{milicevic_quasi-cyclic_2018, gumus_novel_2021}.
+
+CASCADE may be easier to implement on limited hardware but can incur heavy interaction costs, while
+LDPC is more communication-efficient but may demand block sizes or processing
+resources that are difficult to realise on a budget-conscious CPU-only space
+platform. The central literature question is therefore not which protocol is
+better in the abstract, but which trade-off is more favourable under realistic
+mission constraints.
+
+\section{Comparative Literature}
+\label{sec:lit-comparative}
+
+MENTION Mueller et al consider DV-QKD and only up to 0.1 QBER
+
+Direct comparisons between CASCADE and LDPC are less common than studies of
+each protocol individually. Where they do exist, the results depend strongly
+on the channel model, QKD protocol, hardware assumptions, and chosen
+performance metrics.
+
+Recent comparative work by Mueller et al shows that communication rounds, verification cost,
+classical-channel behaviour, and robustness to parameter mismatch can all
+change the relative attractiveness of a protocol
+\cite{mueller_performance_2025}. In particular, practical studies emphasise
+that protocol assessment should be application-oriented: the relevant question
+is which method performs better under the constraints of the intended
+deployment, not which appears stronger in isolation
+\cite{mueller_performance_2025, jordan-parra_evaluation_2024}.
+
+Another consistent lesson is that successful reconciliation does not
+automatically imply useful key generation. A protocol may correct errors
+correctly while still revealing too much information, or requiring too much
+communication, for a useful secret key to remain after privacy amplification
+\cite{mueller_performance_2025, tupkary_using_2023}. This distinction is
+especially important when comparing interactive and syndrome-based methods,
+because they can fail for different reasons: one through excessive leakage and
+latency, the other through decoding failure or impractical resource demands.
+
+\section{Research Gap}
+\label{sec:lit-gaps}
+
+Taken together, the literature reveals a clear gap relevant to this
+dissertation. First, much comparative reconciliation work is focused on DV-QKD
+or simplified binary channel models, whereas this project considers
+reverse-reconciliation CV-QKD with preprocessing that preserves soft
+information. Second, the low-SNR regime relevant to free-space CV-QKD is not
+the regime in which CASCADE is usually most attractive. Third, existing
+studies rarely translate reconciliation behaviour into a CubeSat-style mission
+model with explicit limits on pass duration, bandwidth, latency, memory, and
+onboard compute. Fourth, many of the strongest LDPC results assume hardware
+acceleration or very large block lengths that are not obviously representative
+of a CPU-only CubeSat platform
+\cite{milicevic_quasi-cyclic_2018, mueller_performance_2025, jordan-parra_evaluation_2024, simmons_hogs_2025}.
+
+This gap motivates the central approach of this dissertation: to compare
+CASCADE and LDPC not only at the level of reconciliation behaviour, but also
+at the level of mission feasibility within a representative LEO CubeSat model.
+
+\section{Summary}
+\label{sec:lit-summary}
+
+The literature shows that space QKD is technically viable and increasingly
+oriented towards practical deployment, but that CubeSat missions introduce much
+tighter systems constraints than are usually captured in protocol-level
+studies. It also shows that CASCADE and LDPC represent two contrasting
+reconciliation strategies: CASCADE is simple and interactive, whereas LDPC is
+communication-efficient and compute-intensive. Existing comparative work makes
+clear that practical evaluation must include operational constraints as well as
+reconciliation efficiency. What remains insufficiently explored is the specific
+combination of reverse-reconciliation CV-QKD, low-SNR operation, and CubeSat
+mission feasibility. The next chapter addresses this gap through simulation-
+based protocol analysis and a system-level feasibility model.
+
+% =========================================================
+\chapter{Methodology and Implementation}
 \label{cha:methodology}
+% =========================================================
 
-\section{Overview of Approach}
-\label{sec:approach}
-Explain comparative simulation study structure...
+This dissertation uses a quantitative, simulation-based methodology to compare
+LDPC and CASCADE under controlled channel conditions and then assess their
+feasibility in a representative LEO CubeSat mission context. The methodology
+has two parts. Part~I measures reconciliation behaviour under matched error
+conditions. Part~II maps those measurements to first-order communication,
+compute, and memory constraints relevant to an onboard implementation.
 
-Working implementations of LDPC/ CASCADE
+Simulation is appropriate because the target mission environment is not
+available as a controlled testbed, the relevant operating region spans a range
+of low-SNR conditions, and the two algorithms cannot be compared fairly without
+systematic control of channel difficulty
+\cite{mueller_performance_2025, jordan-parra_evaluation_2024}.
 
-Run using some data, get base performance cases
+% ---------------------------------------------------------
+\section{Part I: Simulated Performance Analysis}
+\label{sec:meth-part1}
+% ---------------------------------------------------------
 
-Define typical problem
+LDPC and CASCADE operate on different internal representations. LDPC is a
+one-way, soft-decision code-based scheme used here within a CV-QKD pipeline.
+CASCADE is an interactive, hard-decision protocol evaluated on a binary
+symmetric channel. They therefore cannot be compared on strictly identical
+internal terms.
 
-\section{Simulation Environment?}
-\label{sec:sim-environment}
-Would I be running simulations? What hardware would I use?
+The comparison basis used in this dissertation is the measured
+\textit{pre-correction BER}. On the LDPC side, SNR is swept through the full
+CV-QKD simulation path and the resulting hard decisions are used to measure the
+actual BER seen before decoding. On the CASCADE side, the requested BSC error
+rate is adjusted so that the measured BER aligns with the LDPC operating
+points. This preserves the CV-QKD interpretation on the LDPC side while
+allowing cross-algorithm comparison under matched effective channel difficulty
+\cite{mueller_performance_2025}.
 
-scenario based modelling of LDPC and CASCADE performance.
+\subsection{CV-QKD Channel Model}
+\label{subsec:meth-channel}
 
-representative hardware of SPOQC mission.
-Q8 Xiphos single board computer, CPU only implementation - not using FPGA, 
-use datasheet to find power consumption of only the CPU.
-x86 baseline comparison
+The LDPC experiments are performed within a simplified CV-QKD simulation path
+based on an additive white Gaussian noise channel:
+\begin{equation}
+Y = \sqrt{t}\,X + N, \qquad N \sim \mathcal{N}(0,\sigma_n^2),
+\end{equation}
+where $X$ is Alice's transmitted quadrature, $Y$ is Bob's received quadrature,
+$t$ is effective channel transmittance, and $N$ is Gaussian noise. The
+corresponding operating SNR is
+\begin{equation}
+\text{SNR} = \frac{t \sigma_X^2}{\sigma_n^2}.
+\end{equation}
 
-C/C++ mostly, possibly python, whatever IDE
+This is a fixed-SNR benchmark model rather than a full pass-level optical
+simulation. In a real LEO pass, SNR varies with elevation, pointing, and
+background conditions. For reconciliation benchmarking, however, a fixed
+operating point is an appropriate first-order abstraction because it isolates
+algorithmic behaviour from link-budget dynamics
+\cite{milicevic_quasi-cyclic_2018, jordan-parra_evaluation_2024}.
 
-Will be using LDPC implementation from SPOQC mission (C Library), will need to find off-the-shelf CASCADE implementation
+\subsection{LDPC and CASCADE Pipelines}
+\label{subsec:meth-pipelines}
 
-Need to look into metrics captured at another meeting. (Mainly Power, what else?)
+For LDPC, each experiment follows the same sequence:
+\begin{enumerate}
+    \item Gaussian sample generation;
+    \item additive noise injection at the selected SNR;
+    \item 8-dimensional multidimensional reconciliation preprocessing;
+    \item hard-decision bit mapping and syndrome generation;
+    \item Min-Sum LDPC decoding.
+\end{enumerate}
 
-Describe programming tools, libraries, and metrics captured...
+The multidimensional reconciliation stage follows the Leverrier--Grangier 8D
+procedure, which maps Gaussian-valued observations to binary variables and
+produces both hard decisions and reliability information for decoding
+\cite{leverrier_multidimensional_2008}.
 
-\section{Experimental Parameters}
-\label{sec:experimental-params}
-List Power, SNR range, data size/volume, bandwidth limits, computational constraints...
+CASCADE is evaluated separately on a binary symmetric channel. Each run applies
+the standard cycle of shuffling, block partitioning, parity exchange, binary
+search, and look-back correction. CASCADE is therefore not driven directly by
+SNR, but by the measured BER used to align it to LDPC operating points.
 
-Potential parameters to constrain/compare:
-- Power will most likely be the main metric
-- high and low communication bandwidth
-- high and low SWaP constraints
+\subsection{Software Implementations}
+\label{subsec:meth-implementations}
 
-\section{Implementation Details}
-\label{sec:implementation}
-High-level pseudocode or flow diagram of both algorithms?
-May not be necessary since I won't be implementing the algorithms?
+LDPC is implemented using the \texttt{cvqkd-reconciliation} C library
+developed for the SPOQC CV-QKD payload. Using a mission-relevant codebase makes
+the measurements more representative of the intended deployment context than a
+standalone pedagogical implementation. The decoder uses Min-Sum decoding on
+quasi-cyclic parity-check matrices. Three matrices are evaluated:
+\begin{itemize}
+    \item \texttt{256x255\_z1}
+    \item \texttt{512x511\_z4}
+    \item \texttt{1024x1023\_z1}
+\end{itemize}
+These are existing low-SNR matrices available in the SPOQC codebase and were
+selected as the study set for comparative testing.
 
-\section{Validation and Testing Strategy}
-\label{sec:validation}
-How you’ll verify correctness of implementations. (from CS Assessment Guidance, not sure if needed)
+CASCADE is implemented using the open-source \texttt{cascade-cpp} library
+\cite{rijsman_brunorijsmancascade-cpp_2026}. This implementation records timing,
+message-count, parity-request, and leakage statistics, which makes it suitable
+both for direct comparison and for later latency modelling.
 
-run some baseline tests?
-look into performance analysis guidelines? standards/tools? profiling tools
+\subsection{Statistics Tracking Contribution}
+\label{subsec:meth-tracking}
 
-\section{Ethical and Professional Considerations}
-\label{sec:ethics}
-I assume Minimal issues (no human data, open datasets, no classified info)?
+A key implementation contribution of this dissertation is the addition of a
+dedicated statistics-tracking system to the internal SPOQC LDPC repository.
+The original \texttt{cvqkd-reconciliation} library was extended so that each
+operating point emits structured statistics in Newline-Delimited JSON
+(NDJSON) format. The output schema was designed to align closely with
+\texttt{cascade-cpp}, so that both algorithms could be parsed and analysed
+through the same downstream workflow.
 
+The added tracking records the main quantities required for comparison:
+pre-correction bit errors and BER, post-correction bit errors and BER, frame
+error rate, elapsed process time, elapsed real time, decoder iterations,
+reconciliation bits, reconciliation bits per key bit, and reconciliation
+efficiency.
+
+For LDPC, these values are accumulated online over repeated independent frames
+using Welford's algorithm, which provides numerically stable running means and
+sample standard deviations without retaining all raw samples in memory
+\cite{noauthor_algorithms_2026}. This is useful for large sweeps and high
+trial counts, and it keeps the measurement layer lightweight enough to remain
+compatible with the existing SPOQC implementation. The tracked output fields
+for both implementations are summarised in
+Appendix~\ref{chap:appendix-output}.
+
+\subsection{Experiment Orchestration}
+\label{subsec:meth-orchestration}
+
+LDPC sweeps are orchestrated using an external Python runner driven by a YAML
+configuration file. The runner varies SNR and parity-check matrix selection,
+invokes the LDPC binary, and stores machine-readable outputs for later
+analysis. A geometric SNR schedule is used so that the low-SNR regime is
+sampled more densely, since this is the expected operating range for a LEO CubeSat and the
+behaviour changes most rapidly there \cite{milicevic_quasi-cyclic_2018}. 
+A representative configuration is provided
+in Appendix~\ref{chap:appendix-config}.
+
+CASCADE operating points are generated separately over requested BSC error
+rates. These runs are later matched to LDPC points using the measured
+pre-correction BER.
+
+\subsection{Recorded Metrics}
+\label{subsec:meth-metrics}
+
+The comparison uses the following metrics.
+
+\paragraph{Reconciliation efficiency.}
+Efficiency is defined as
+\begin{equation}
+f = \frac{\text{reconciliation\_bits}}{n \cdot H_2(q)},
+\end{equation}
+where $n$ is the frame length and $q$ is the measured pre-correction BER.
+Values close to 1 indicate operation near the Shannon limit.
+
+\paragraph{Pre-correction BER.}
+This is the measured BER before reconciliation. It is used both as a sanity
+check and as the alignment variable for joint LDPC/CASCADE plots.
+
+\paragraph{Remaining BER and FER.}
+These measure post-correction reliability. For LDPC, FER is important because
+frame-level decoding failure remains possible. For CASCADE, zero residual BER
+in unconstrained simulation does not by itself imply mission feasibility.
+
+\paragraph{Reconciliation bits per key bit.}
+This normalises classical communication overhead across different frame sizes.
+
+\paragraph{Elapsed process time and elapsed real time per key bit.}
+These provide normalised compute-cost measures for later feasibility analysis.
+
+\paragraph{CASCADE message count.}
+This captures the number of sequential parity-message exchanges and is required
+for latency modelling.
+
+\paragraph{LDPC decoder iterations.}
+This indicates decoding difficulty and its relationship to compute cost.
+
+\subsection{Statistical Treatment}
+\label{subsec:meth-statistics}
+
+Each operating point is evaluated over repeated independent trials. For LDPC,
+each trial is one independently generated frame. For CASCADE, each trial is one
+full reconciliation run over a fixed binary key. Means and sample standard
+deviations are computed for all primary metrics.
+
+This statistical treatment matters because the two algorithm families exhibit
+different levels of variability. LDPC frame sizes ,256, 512 and 2048 bits, in
+this dissertation are short compared with the 10,000-bit CASCADE keys
+used by the reference implementation, so per-frame behaviour is naturally
+more variable. To improve comparability, timing and communication metrics
+are normalised per key bit wherever appropriate \cite{martinez-mateo_demystifying_2015}.
+
+\subsection{Verification}
+\label{subsec:meth-verification}
+
+Each implementation is checked against known references before being used in the
+comparative study.
+
+For CASCADE, verification consists of reproducing the expected efficiency
+behaviour and comparing the resulting curves against the published
+\texttt{cascade-cpp} reference graph and the established literature baseline
+\cite{martinez-mateo_demystifying_2015, mueller_performance_2025}.
+
+For LDPC, verification consists of reproducing the internal SPOQC
+$1 - 2\cdot\text{BER}$ reference curve. Agreement is treated as evidence that
+the Gaussian generation, multidimensional reconciliation, syndrome generation,
+and Min-Sum decoding stages are behaving consistently with the original
+development baseline.
+
+A separate alignment check compares the measured pre-correction BER values used
+in the matched LDPC/CASCADE plots. Any systematic mismatch here would indicate
+an error in the comparison procedure rather than in the reconciliation methods
+themselves. Supporting verification and alignment plots are given in
+Appendix~\ref{chap:appendix-verification}.
+
+% ---------------------------------------------------------
+\section{Part II: System-Level Feasibility Model}
+\label{sec:meth-part2}
+% ---------------------------------------------------------
+
+\subsection{Mission Abstraction}
+\label{subsec:meth-system-model}
+
+The second part of the methodology translates the measured algorithmic results
+into a first-order LEO CubeSat feasibility model. This is not a full mission
+simulation. Its purpose is to determine whether the measured reconciliation
+behaviour remains plausible under representative communication, memory, and
+compute constraints.
+
+The model assumes a Sun-synchronous orbit at approximately 500--600\,km, a
+single high-quality pass per day over a fixed optical ground station, and a
+120\,s quantum transmission window. Reverse reconciliation is assumed, so Bob
+performs measurement and computes the classical side information at the ground
+station, while Alice buffers the corresponding transmitted data onboard.
+
+Three source-rate scenarios are considered:
+\begin{itemize}
+    \item 2\,MHz
+    \item 10\,MHz
+    \item 100\,MHz
+\end{itemize}
+These are used as workload cases for scaling the measured reconciliation
+behaviour to mission-level throughput requirements.
+
+Two classical-link cases are considered. In the first, a short optical
+classical window is available immediately after the quantum phase. In the
+second, classical communication is deferred to the next overpass and uses RF.
+The purpose is not to model a final flight design, but to test whether each
+reconciliation approach is structurally compatible with plausible link budgets.
+
+\subsection{Time and Communication Model}
+\label{subsec:meth-time-model}
+
+Algorithmic outputs are interpreted through the first-order completion-time
+model
+\begin{equation}
+T_{\text{total}} \approx T_{\text{compute}} + T_{\text{tx}} + T_{\text{latency}}.
+\end{equation}
+
+Here $T_{\text{compute}}$ is the onboard time required to perform
+reconciliation on buffered data, $T_{\text{tx}}$ is the time required to
+transfer the necessary classical information, and $T_{\text{latency}}$ is the
+penalty due to sequential interaction.
+
+For LDPC, the dominant terms are compute and one-way transmission. For
+CASCADE, sequential message dependence makes latency a first-class constraint.
+Latency is estimated as
+\begin{equation}
+T_{\text{latency}} = N_{\text{seq}}\tau,
+\end{equation}
+where $N_{\text{seq}}$ is the number of sequential message exchanges and
+$\tau$ is the assumed per-round-trip latency.
+
+\subsection{Latency Scenarios}
+\label{subsec:meth-latency}
+
+CASCADE is simulated without embedded link latency. Latency is instead applied
+analytically during the feasibility stage. The following scenarios are used:
+\begin{itemize}
+    \item ideal simulation: $0$\,s per round-trip;
+    \item optimistic RF: $0.1$\,s per round-trip;
+    \item conservative RF: $0.5$\,s per round-trip;
+    \item optical classical: negligible latency.
+\end{itemize}
+These are sensitivity-analysis cases rather than claims about a final mission
+stack.
+
+\subsection{Feasibility Criteria}
+\label{subsec:meth-feasibility}
+
+Each algorithm, operating point, and mission scenario is assessed against the
+same criteria:
+\begin{itemize}
+    \item usable at the target SNR or matched BER;
+    \item successful reconciliation, measured through remaining BER and FER;
+    \item acceptable leakage, measured through efficiency and reconciliation
+    bits per key bit;
+    \item classical communication feasible within the assumed optical or RF
+    window;
+    \item sequential latency feasible within the available communication
+    window;
+    \item compute throughput feasible for the buffered workload;
+    \item memory demand feasible for the assumed onboard buffer.
+\end{itemize}
+
+These criteria are later combined into the feasibility matrix used in the
+analysis chapter.
+
+\subsection{Scope and Limitations}
+\label{subsec:meth-limitations}
+
+Several limitations are explicit. First, the channel model uses fixed SNR
+operating points rather than a dynamic pass-level optical simulation. Second,
+CASCADE is compared through BER alignment rather than through a full Gaussian
+CV-QKD data path. Third, all measurements are taken on development hardware,
+not on flight hardware. Fourth, latency is applied analytically rather than
+through a full network emulator. These choices are acceptable for a first-order
+comparative study, but they limit how directly the measured timings can be
+interpreted as flight performance.
+
+\subsection{Ethical and Professional Considerations}
+\label{subsec:meth-ethics}
+
+This work raises no significant ethical concerns. It does not involve human
+participants, personal data, or classified material. From a professional
+standpoint, the methodology prioritises traceability and reproducibility:
+configurations are stored declaratively, outputs are machine-readable, and
+modelling assumptions are stated explicitly.
+
+\section{Chapter Summary}
+\label{sec:meth-summary}
+
+This chapter defined the comparative methodology used in the dissertation.
+Part~I established the matched-BER comparison framework, the CV-QKD benchmark
+channel, the LDPC and CASCADE experiment pipelines, the software
+implementations, the LDPC statistics-tracking contribution, the recorded
+metrics, and the verification procedure. Part~II defined the first-order LEO
+CubeSat feasibility model used to reinterpret those measurements in
+communication, compute, and memory terms. The next chapter presents the
+measured results and their implications for algorithm choice in the target
+mission context.
+
+% =========================================================
 \chapter{Results and Analysis}
 \label{cha:results}
+% =========================================================
 
-\section{Raw Results Overview}
-\label{sec:raw-results}
-Tables and figures showing throughput, error rate, latency, etc.
+This chapter presents the measured reconciliation results and then interprets
+them using the feasibility model defined in
+Chapter~\ref{cha:methodology}. Each operating point was evaluated over repeated
+independent trials; the reported values are means with sample standard
+deviations unless otherwise stated.
 
-\section{Performance Comparison}
-\label{sec:performance-comparison}
-Discuss patterns - which performs better under which constraints?
+\section{Part I: Algorithmic Results}
+\label{sec:results-part1}
 
-\section{Resource Analysis}
-\label{sec:resource-analysis}
-Power, CPU, memory, bandwidth usage.
+\subsection{Efficiency}
+\label{subsec:results-efficiency}
+
+Figure~\ref{fig:efficiency-placeholder} shows reconciliation efficiency against
+matched pre-correction BER. Efficiency is the main leakage metric and is
+therefore the primary basis for comparing algorithm quality at a given channel
+difficulty.
+
+% Insert efficiency figures here.
+
+The main outcome is that LDPC and CASCADE occupy different operating regimes.
+LDPC trades additional local decoding work for low interaction, whereas
+CASCADE trades interaction for correction performance. The detailed behaviour,
+including which method is more efficient at a given matched BER, is discussed
+in Section~\ref{subsec:results-synthesis}.
+
+\subsection{Correction Reliability}
+\label{subsec:results-reliability}
+
+Figures~\ref{fig:remaining-ber-placeholder} and
+\ref{fig:remaining-fer-placeholder} show post-correction BER and FER. These
+plots indicate the channel region in which each method remains operationally
+useful.
+
+% Insert remaining BER / FER figures here.
+
+For LDPC, FER is the key reliability metric because frame-level decoding
+failure remains possible even when mean BER trends appear favourable. For
+CASCADE, the unconstrained runs produce zero residual BER in the tested range,
+but this must later be interpreted together with message count and latency,
+since perfect correction in simulation does not guarantee feasibility onboard.
+
+\subsection{Communication Overhead}
+\label{subsec:results-overhead}
+
+Figure~\ref{fig:recon-bits-placeholder} shows reconciliation bits per key bit.
+This metric captures the classical information disclosed during reconciliation
+and therefore complements efficiency with a more direct communication-cost
+view.
+
+% Insert reconciliation bits / bits per key bit figures here.
+
+LDPC overhead is largely determined by the chosen parity-check matrix, whereas
+CASCADE overhead varies with error rate and protocol interaction. This
+difference becomes important in the system-level analysis.
+
+\subsection{Compute Cost}
+\label{subsec:results-compute}
+
+Figures~\ref{fig:process-time-placeholder} and
+\ref{fig:real-time-placeholder} show process time and wall-clock time,
+normalised per key bit.
+
+% Insert timing figures here.
+
+These measurements are used directly in the later compute-feasibility model.
+Here the main observation is whether cost remains stable, rises sharply in the
+low-SNR regime, or differs significantly between LDPC matrices and CASCADE.
+
+\subsection{Interaction Cost}
+\label{subsec:results-interaction}
+
+For CASCADE, message count is a distinct metric because it drives latency
+sensitivity. It is therefore analysed separately from raw communication volume.
+
+% Insert CASCADE message-count figure/table here if available.
+
+This metric has no direct LDPC equivalent, since LDPC is structurally one-way.
+It becomes important only when the results are interpreted under optical and RF
+round-trip assumptions.
+
+\subsection{Synthesis of Part I Results}
+\label{subsec:results-synthesis}
+
+Part~I establishes the algorithmic trade-off. LDPC is characterised by
+one-way communication, decoder iterations, and frame-level failure behaviour.
+CASCADE is characterised by interactive parity exchange, near-zero residual
+error in unconstrained simulation, and sensitivity to sequential message count.
+The significance of these differences cannot be judged from raw plots alone;
+they must be interpreted in the mission context developed in Part~II.
+
+\section{Part II: Feasibility Analysis}
+\label{sec:results-part2}
+
+\subsection{Workload Scaling}
+\label{subsec:results-workload}
+
+The measured per-bit timing and communication results are scaled to the
+2\,MHz, 10\,MHz, and 100\,MHz mission scenarios defined in
+Section~\ref{subsec:meth-system-model}. This converts algorithmic measurements
+into required throughput, transfer volume, and completion time.
+
+% Insert throughput / workload table here.
+
+\subsection{Communication Feasibility}
+\label{subsec:results-comm-feasibility}
+
+This section evaluates whether the required reconciliation information fits
+within the assumed optical and RF classical links.
+
+% Insert bandwidth-feasibility table/figure here.
+
+The key question is not only how many bits must be exchanged, but whether those
+bits can be delivered within the available communication window.
+
+\subsection{Latency Feasibility}
+\label{subsec:results-latency-feasibility}
+
+CASCADE results are reinterpreted under the latency scenarios defined in
+Section~\ref{subsec:meth-latency}. The number of sequential message exchanges
+is multiplied by the assumed round-trip latency to estimate the interaction
+penalty.
+
+% Insert latency-scenario figure/table here.
+
+This shows whether CASCADE remains feasible only in idealised conditions or
+whether it survives more conservative RF assumptions.
+
+\subsection{Compute and Memory Feasibility}
+\label{subsec:results-compute-feasibility}
+
+This section evaluates whether the measured LDPC processing cost and buffered
+data volumes remain compatible with the assumed onboard compute and memory
+limits.
+
+% Insert compute/memory feasibility table here.
+
+The main question is whether CPU-only reconciliation can keep pace with the
+buffered workload at each source-rate scenario. This is particularly important
+because a CPU-only solution is operationally simpler than one requiring a
+specialised FPGA or GPU implementation.
+
+\subsection{Feasibility Matrix}
+\label{subsec:results-feasibility-matrix}
+
+The final outcome is the feasibility matrix, which combines algorithmic and
+systems-level criteria into a decision-oriented summary.
+
+% Insert feasibility matrix here.
+
+This matrix is the main project output because it ties measured reconciliation
+behaviour back to the original mission question: not which protocol is best in
+the abstract, but which protocol remains usable under realistic CubeSat
+constraints.
 
 \section{Discussion}
 \label{sec:discussion}
-Tie results back to theory (e.g., “LDPC’s iterative decoding explains...”).
-Which one would you pick
 
+The results show that algorithm choice depends on more than raw correction
+performance. LDPC and CASCADE differ structurally in how they consume
+computation, communication, and latency budget. The most important implication
+is therefore not a single global winner, but a conditional trade-off across
+operating regime and mission architecture.
+
+Relate the final discussion explicitly to the project aim:
+\begin{itemize}
+    \item Which algorithm remains usable at the target low-SNR operating region?
+    \item Which algorithm fits the available classical communication window?
+    \item Which algorithm is compatible with CPU-only onboard processing?
+    \item Which algorithm leaks less information for useful key generation?
+\end{itemize}
 
 \section{Limitations}
 \label{sec:limitations}
-Transparent about assumptions (simulated interference?, fixed SNR, etc.).
-Testing on a single hardware platform and unable to extrapolate SPOQC mission constraints, specific for CV-QKD
 
+The analysis inherits the limitations of the methodology. The results are based
+on fixed-SNR operating points, analytical latency injection, BER alignment
+rather than a shared internal channel model, and measurements on development
+hardware rather than flight hardware. These limitations do not invalidate the
+comparative study, but they define its scope as a first-order systems analysis
+rather than a final mission-performance prediction.
 \chapter{Conclusions and Future Work}
 \label{cha:conclusion}
 
@@ -234,6 +1120,9 @@ Directly answer research question.
 
 \section{Implications}
 \label{sec:implications}
+
+MENTION LDPC IS THE BETTER CHOICE, BECAUSE LESS COMMUNICATION AND IT MAKES USE OF SOFT INFORMATION WHICH CASCADE DISCARDS.
+
 For real-world CubeSat design - how results inform future missions.
 
 \section{Success Criteria Evaluation}
@@ -247,12 +1136,185 @@ good reserach practice, statistical
 expand analysis to include different platforms , hybrid error correction schemes ?
 
 \appendix
-\chapter{Some apendix}
-Fusce congue mauris leo, nec sagittis justo convallis quis. Maecenas varius tellus vel nulla facilisis accumsan. Nunc in facilisis nulla. Suspendisse ac molestie ante. Duis vulputate sit amet tellus eget efficitur. Cras ut dolor at dolor molestie dignissim. Proin eu massa dapibus, feugiat quam auctor, porttitor urna. Integer porttitor, libero a egestas lacinia, neque leo luctus elit, id iaculis leo quam porta est. Integer ut porttitor tortor.
 
-\chapter{Another apendix}
-Donec felis sem, consectetur eu cursus ac, auctor sollicitudin velit. Sed hendrerit, metus et gravida vulputate, urna lacus facilisis neque, sed accumsan tellus nibh vel metus. Ut tempus felis neque, vitae rutrum ligula tristique sit amet. Morbi nec dui lectus. Ut fringilla orci in faucibus sodales. Integer dolor arcu, pellentesque a blandit non, volutpat vitae sem. Curabitur sit amet nunc tincidunt, mollis purus in, luctus eros.
+\chapter{Verification}
+\label{chap:appendix-verification}
 
+This appendix collects the verification and alignment plots used to validate
+the experimental workflow described in
+Section~\ref{subsec:meth-verification}.
+
+\begin{figure}[!htbp]
+    \centering
+
+    % Row 1: CASCADE
+    \begin{minipage}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{experiments/graphs/VerificationCascadeOriginal0.png}
+        \subcaption{CASCADE efficiency reproduced in this dissertation workflow.}
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{experiments/graphs/cascadec_cpp_author_fig_1.png}
+        \subcaption{\texttt{cascade-cpp} reference efficiency graph.}
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{experiments/graphs/Figure_1_demyst.png}
+        \subcaption{Published efficiency behaviour from \textit{Demystifying the Information Reconciliation Protocol Cascade}.}
+    \end{minipage}
+
+    \vspace{1em}
+
+    % Row 2: LDPC
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{experiments/graphs/1-2xBER.png}
+        \subcaption{Reproduced LDPC $1 - 2\cdot\mathrm{BER}$ curve.}
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{experiments/graphs/ed_ldpc_1-2xBER.png}
+        \subcaption{Internal SPOQC reference $1 - 2\cdot\mathrm{BER}$ curve.}
+    \end{minipage}
+
+    \caption{Verification figures used to validate the CASCADE and LDPC implementations. Panels (a)--(c) compare the reproduced CASCADE efficiency behaviour against software and literature references; panels (d)--(e) compare the reproduced LDPC preprocessing behaviour against the internal reference baseline.}
+    \label{fig:verification_appendix}
+\end{figure}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.78\linewidth]{experiments/graphs/actual_bit_error_rate.png}
+    \caption{Measured pre-correction BER alignment used in the matched-condition
+    LDPC/CASCADE comparison. Agreement supports the correctness of the
+    alignment procedure independently of the reconciliation algorithms
+    themselves.}
+    \label{fig:ber_alignment_appendix}
+\end{figure}
+
+
+\chapter{Example Experiment Configuration}
+\label{chap:appendix-config}
+
+This appendix gives a representative configuration for the external LDPC sweep
+runner described in Section~\ref{subsec:meth-orchestration}. The listing is
+illustrative and shows the main parameters used to define an SNR sweep.
+
+\begin{lstlisting}[style=appendixcode,language={},caption={Example YAML configuration for an LDPC SNR sweep.},label={lst:yaml-config}]
+experiment_name: "snr_sweep_0_to_7_5_1000frames_per_point"
+seed: 123
+
+snr:
+  start: 0.0001
+  end: 7.5
+  step_factor: 1.1
+
+frames_per_point: 10000
+
+ldpc:
+  binary: "cvqkd-reconciliation/build/ldpc_experiment"
+  b_matrices_dir: "cvqkd-reconciliation/data/B_matrices"
+  b_matrices: ["256x255_z1.coo", "512x511_z4.coo", "1024x1023_z1.coo"]
+  qkd_dimension: 8
+
+output:
+  raw_dir: "experiments/data/raw"
+\end{lstlisting}
+
+
+\chapter{Tracked Statistics and Output Format}
+\label{chap:appendix-output}
+
+This appendix summarises the structured statistics recorded for both
+implementations and gives representative output examples. The LDPC tracking
+layer was designed to align closely with the output style of
+\texttt{cascade-cpp}, making downstream comparison and plotting simpler.
+
+\section{CASCADE tracked statistics}
+
+\begin{table}[!htbp]
+    \centering
+    \begin{tabular}{p{0.30\linewidth} p{0.60\linewidth}}
+        \hline
+        Field & Meaning \\
+        \hline
+        \texttt{elapsed\_process\_time} & CPU process time used by the reconciliation run. \\
+        \texttt{elapsed\_real\_time} & Wall-clock runtime of the reconciliation run. \\
+        \texttt{normal\_iterations} & Number of normal CASCADE iterations. \\
+        \texttt{biconf\_iterations} & Number of BICONF iterations, where applicable. \\
+        \texttt{start\_iteration\_messages} & Messages used to begin iterations. \\
+        \texttt{start\_iteration\_bits} & Bits used in iteration-start metadata, including shuffle-related information. \\
+        \texttt{ask\_parity\_messages} & Number of parity round-trips. \\
+        \texttt{ask\_parity\_blocks} & Total number of blocks for which parity was requested. \\
+        \texttt{ask\_parity\_bits} & Total number of bits used for parity requests. \\
+        \texttt{reply\_parity\_bits} & Total number of bits used in parity replies. \\
+        \texttt{reconciliation\_bits} & Total classical bits exchanged during reconciliation. \\
+        \texttt{efficiency} & Reconciliation efficiency relative to the Shannon limit. \\
+        \texttt{reconciliation\_bits\_per\_key\_bit} & Classical communication overhead normalised per key bit. \\
+        \texttt{infer\_parity\_blocks} & Number of block parities inferred rather than explicitly requested. \\
+        \hline
+    \end{tabular}
+    \caption{Main statistics recorded by the \texttt{cascade-cpp} implementation.}
+    \label{tab:cascade-tracking-fields}
+\end{table}
+
+\section{LDPC tracked statistics}
+
+\begin{table}[!htbp]
+    \centering
+    \begin{tabular}{p{0.30\linewidth} p{0.60\linewidth}}
+        \hline
+        Field & Meaning \\
+        \hline
+        \texttt{algorithm\_name} & Algorithm identifier, always \texttt{LDPC}. \\
+        \texttt{key\_size} & Number of bits processed per frame. \\
+        \texttt{reconciliations} & Number of independent frames processed. \\
+        \texttt{snr} & Operating signal-to-noise ratio for the run. \\
+        \texttt{actual\_bit\_errors} & Mean and deviation of pre-correction bit errors. \\
+        \texttt{actual\_bit\_error\_rate} & Mean and deviation of pre-correction BER. \\
+        \texttt{remaining\_bit\_errors} & Mean and deviation of post-correction bit errors. \\
+        \texttt{remaining\_bit\_error\_rate} & Mean and deviation of post-correction BER. \\
+        \texttt{remaining\_frame\_error\_rate} & Mean and deviation of post-correction FER. \\
+        \texttt{elapsed\_process\_time} & Mean and deviation of CPU process time. \\
+        \texttt{elapsed\_real\_time} & Mean and deviation of wall-clock runtime. \\
+        \texttt{normal\_iterations} & Mean and deviation of Min-Sum decoder iterations. \\
+        \texttt{reconciliation\_bits} & Mean and deviation of syndrome size or disclosed reconciliation bits. \\
+        \texttt{reconciliation\_bits\_per\_key\_bit} & Mean and deviation of overhead normalised per key bit. \\
+        \texttt{efficiency} & Mean and deviation of reconciliation efficiency, calculated compatibly with CASCADE. \\
+        \hline
+    \end{tabular}
+    \caption{Main statistics recorded by the LDPC tracking extension.}
+    \label{tab:ldpc-tracking-fields}
+\end{table}
+
+\section{Example structured output}
+
+\begin{lstlisting}[style=appendixcode,language={},caption={Illustrative NDJSON-style summary record for one LDPC operating point.},label={lst:ndjson-example}]
+{
+  "algorithm_name": "LDPC",
+  "key_size": 512,
+  "reconciliations": 10000,
+  "snr": 0.123,
+  "actual_bit_error_rate_mean": 0.0812,
+  "actual_bit_error_rate_std": 0.0031,
+  "remaining_bit_error_rate_mean": 0.0004,
+  "remaining_bit_error_rate_std": 0.0012,
+  "remaining_frame_error_rate_mean": 0.0170,
+  "remaining_frame_error_rate_std": 0.1293,
+  "elapsed_process_time_mean": 2.1e-5,
+  "elapsed_process_time_std": 4.8e-6,
+  "elapsed_real_time_mean": 2.4e-5,
+  "elapsed_real_time_std": 5.1e-6,
+  "normal_iterations_mean": 18.6,
+  "normal_iterations_std": 7.4,
+  "reconciliation_bits_mean": 256.0,
+  "reconciliation_bits_std": 0.0,
+  "reconciliation_bits_per_key_bit_mean": 0.5,
+  "reconciliation_bits_per_key_bit_std": 0.0,
+  "efficiency_mean": 1.084,
+  "efficiency_std": 0.019
+}
+\end{lstlisting}
 
 \printbibliography
 
