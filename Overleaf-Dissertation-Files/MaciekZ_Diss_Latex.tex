@@ -961,18 +961,72 @@ trials with ±1$\sigma$ shaded bands where shown.
 \subsection{Efficiency}
 \label{subsec:results-efficiency}
 
-Figure~\ref{fig:efficiency-placeholder} shows reconciliation efficiency against
-matched pre-correction BER. Efficiency is the main leakage metric and is
-therefore the primary basis for comparing algorithm quality at a given channel
-difficulty.
+Figures~\ref{fig:efficiency-full} and \ref{fig:efficiency-zoom} show
+reconciliation efficiency $\eta = \mathrm{reconciliation\_bits} / (n \cdot H_2(q))$
+against matched pre-correction BER. Three numerical observations dominate.
 
-% Insert efficiency figures here.
+First, in the low-BER regime canonically used to evaluate CASCADE
+\cite{martinez-mateo_demystifying_2015}, CASCADE is close to the Shannon limit
+while LDPC is extremely over-provisioned. At $q = 0.01$, CASCADE achieves
+$\eta \approx 1.14$; at $q = 0.05$, $\eta \approx 1.19$; at $q = 0.10$,
+$\eta \approx 1.21$. LDPC is measurably worse in the same region because its
+syndrome size is fixed by the code rate: at $q = 0.02$, the rate-$\approx\!1/256$
+codes produce $\eta \approx 6.8\text{--}8.1$ (Figure~\ref{fig:efficiency-full}),
+i.e.\ seven to eight times the Shannon lower bound. Our CASCADE values lie a
+few percent above those reported by Mart\'inez-Mateo et al.\ (1.09 at $Q=2\%$,
+1.10 at $Q=5\%$ \cite{martinez-mateo_demystifying_2015}); the gap is consistent
+with using the 4-pass original variant without the additional BICONF stage and
+with cascade-cpp's default block-size schedule.
 
-The main outcome is that LDPC and CASCADE occupy different operating regimes.
-LDPC trades additional local decoding work for low interaction, whereas
-CASCADE trades interaction for correction performance. The detailed behaviour,
-including which method is more efficient at a given matched BER, is discussed
-in Section~\ref{subsec:results-synthesis}.
+Second, the two curves cross at $q \approx 0.22$. Beyond the crossover, LDPC
+becomes more efficient: $\eta = 1.14, 1.03, 1.00$ for LDPC at $q = 0.30, 0.40,
+0.49$ respectively, against $\eta = 1.40, 1.50, 1.59$ for CASCADE at the same
+operating points. For the expected low-SNR LEO CV-QKD operating region
+\cite{milicevic_quasi-cyclic_2018}, LDPC therefore has the \emph{leakage}
+advantage, which is the opposite of the usual narrative in DV-QKD contexts.
+
+Third, the LDPC efficiency curve asymptotes to $0.996\text{--}0.999$ at
+$q \to 0.5$. This is not a genuine super-Shannon result: at $q = 0.5$,
+$H_2(q) \to 1$, so $\eta \to \mathrm{recon\_bits}/n \to (M-1)/M \approx 0.996$
+by construction of the code. The apparent sub-unit efficiency coincides with
+the onset of frame-level decoding failure (Section~\ref{subsec:results-reliability})
+and so indicates that the efficiency metric has become uninformative there
+rather than that LDPC has exceeded the Shannon bound.
+
+The three LDPC frame lengths (256, 1024, 2048) produce visually indistinguishable
+efficiency curves except in the extreme low-BER tail, where the fractional
+syndrome-size differences $((M-1)/M)$ matter. The step discontinuities in
+the CASCADE curve near $q = 0.09, 0.14, 0.18, 0.25, 0.37$ correspond to
+cascade-cpp's piecewise block-size schedule switching to a larger $k_1$
+\cite{martinez-mateo_demystifying_2015, rijsman_brunorijsmancascade-cpp_2026}.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=1.0\linewidth]{experiments/graphs/results/efficiency_full.png}
+    \caption{Reconciliation efficiency $\eta$ over the full BER range. Crossover
+    at $q \approx 0.22$; LDPC asymptotes to $\eta \approx 1$ but this coincides
+    with decoder failure (cf.\ Figure~\ref{fig:remaining-fer}). Top axis is
+    empirical LDPC-input SNR.}
+    \label{fig:efficiency-full}
+\end{figure}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=1.0\linewidth]{experiments/graphs/results/efficiency_zoom.png}
+    \caption{Efficiency in the low-BER regime $q \le 0.10$ where CASCADE is
+    conventionally characterised. LDPC data is absent below $q \approx 0.015$
+    because the SNR sweep does not reach that cleanly.}
+    \label{fig:efficiency-zoom}
+\end{figure}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=1.0\linewidth]{experiments/graphs/results/efficiency_zoom_2.png}
+    \caption{Efficiency in the high-BER regime $q \le 0.10$ where CASCADE is
+    conventionally characterised. LDPC data is absent below $q \approx 0.015$
+    because the SNR sweep does not reach that cleanly.}
+    \label{fig:efficiency-zoom}
+\end{figure}
 
 \subsection{Correction Reliability}
 \label{subsec:results-reliability}
@@ -1168,17 +1222,17 @@ Section~\ref{subsec:meth-verification}.
     % Row 1: CASCADE
     \begin{minipage}[t]{0.32\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{experiments/graphs/VerificationCascadeOriginal0.png}
+        \includegraphics[width=\linewidth]{experiments/graphs/verification/cascade/VerificationCascadeOriginal0.png}
         \subcaption{CASCADE efficiency reproduced in this dissertation workflow.}
     \end{minipage}\hfill
     \begin{minipage}[t]{0.32\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{experiments/graphs/cascadec_cpp_author_fig_1.png}
+        \includegraphics[width=\linewidth]{experiments/graphs/verification/cascade/cascadec_cpp_author_fig_1.png}
         \subcaption{\texttt{cascade-cpp} reference efficiency graph.}
     \end{minipage}\hfill
     \begin{minipage}[t]{0.32\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{experiments/graphs/Figure_1_demyst.png}
+        \includegraphics[width=\linewidth]{experiments/graphs/verification/cascade/fig1_demyst_ir_cascade.png}
         \subcaption{Published efficiency behaviour from \textit{Demystifying the Information Reconciliation Protocol Cascade}.}
     \end{minipage}
 
@@ -1187,12 +1241,12 @@ Section~\ref{subsec:meth-verification}.
     % Row 2: LDPC
     \begin{minipage}[t]{0.48\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{experiments/graphs/1-2xBER.png}
+        \includegraphics[width=\linewidth]{experiments/graphs/verification/ldpc/1-2xBER.png}
         \subcaption{Reproduced LDPC $1 - 2\cdot\mathrm{BER}$ curve.}
     \end{minipage}\hfill
     \begin{minipage}[t]{0.48\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{experiments/graphs/ed_ldpc_1-2xBER.png}
+        \includegraphics[width=\linewidth]{experiments/graphs/verification/ldpc/ed_ldpc_1-2xBER.png}
         \subcaption{Internal SPOQC reference $1 - 2\cdot\mathrm{BER}$ curve.}
     \end{minipage}
 
@@ -1202,11 +1256,17 @@ Section~\ref{subsec:meth-verification}.
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.78\linewidth]{experiments/graphs/actual_bit_error_rate.png}
+    \includegraphics[width=0.78\linewidth]{experiments/graphs/verification/actual_bit_error_rate.png}
     \caption{Measured pre-correction BER alignment used in the matched-condition
     LDPC/CASCADE comparison. Agreement supports the correctness of the
-    alignment procedure independently of the reconciliation algorithms
-    themselves.}
+    alignment independently of the reconciliation algorithms themselves.}
+    \label{fig:ber_alignment_appendix}
+\end{figure}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.78\linewidth]{experiments/graphs/results/snr_vs_ber.png}
+    \caption{SNR vs measured pre-correction BER, with the Binary phase shift keying formula for reference }
     \label{fig:ber_alignment_appendix}
 \end{figure}
 
