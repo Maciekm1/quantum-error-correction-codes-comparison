@@ -660,24 +660,32 @@ produces both hard decisions and reliability information for decoding
 
 CASCADE is evaluated separately on a binary symmetric channel. Each run applies
 the standard cycle of shuffling, block partitioning, parity exchange, binary
-search, and look-back correction. CASCADE is therefore not driven directly by
+search, and look-back correction \cite{martinez-mateo_demystifying_2015}. CASCADE is therefore not driven directly by
 SNR, but by the measured BER used to align it to LDPC operating points.
 
 \subsection{Software Implementations}
 \label{subsec:meth-implementations}
 
 LDPC is implemented using the \texttt{cvqkd-reconciliation} C library
-developed for the SPOQC CV-QKD payload. Using a mission-relevant codebase makes
+developed for the SPOQC CV-QKD payload \cite{noauthor_hubs_nodate}. Using a mission-relevant codebase makes
 the measurements more representative of the intended deployment context than a
-standalone pedagogical implementation. The decoder uses Min-Sum decoding on
-quasi-cyclic parity-check matrices. Three matrices are evaluated:
+standalone implementation. The decoder uses Min-Sum decoding on
+quasi-cyclic parity-check matrices. A matrix named \texttt{MxN\_zK} denotes a
+base parity-check matrix of shape $M \times N$ expanded by a circulant lifting
+factor $z = K$, producing a final parity-check matrix of size
+$(Mz) \times (Nz)$ and therefore a frame length of $n = Mz$ bits per
+reconciliation. Three matrices are evaluated:
 \begin{itemize}
-    \item \texttt{256x255\_z1}
-    \item \texttt{512x511\_z4}
-    \item \texttt{1024x1023\_z1}
+    \item \texttt{256x255\_z1} — frame length $n = 256$ bits,
+    \item \texttt{512x511\_z4} — frame length $n = 2048$ bits,
+    \item \texttt{1024x1023\_z1} — frame length $n = 1024$ bits.
 \end{itemize}
 These are existing low-SNR matrices available in the SPOQC codebase and were
-selected as the study set for comparative testing.
+selected as the study set for comparative testing. In the remainder of the
+dissertation LDPC variants are identified by their effective frame length
+(256, 1024, and 2048 bits) rather than by base-matrix name, since the frame
+length is what controls per-frame behaviour, statistics, and normalised
+metrics.
 
 CASCADE is implemented using the open-source \texttt{cascade-cpp} library
 \cite{rijsman_brunorijsmancascade-cpp_2026}. This implementation records timing,
@@ -716,11 +724,14 @@ Appendix~\ref{chap:appendix-output}.
 LDPC sweeps are orchestrated using an external Python runner driven by a YAML
 configuration file. The runner varies SNR and parity-check matrix selection,
 invokes the LDPC binary, and stores machine-readable outputs for later
-analysis. A geometric SNR schedule is used so that the low-SNR regime is
-sampled more densely, since this is the expected operating range for a LEO CubeSat and the
-behaviour changes most rapidly there \cite{milicevic_quasi-cyclic_2018}. 
-A representative configuration is provided
-in Appendix~\ref{chap:appendix-config}.
+analysis. A geometric SNR schedule is used in the range
+$\mathrm{SNR} \in [10^{-4}, 7]$ so that the low-SNR regime is sampled more
+densely, since this is the expected operating range for a LEO CubeSat and the
+behaviour changes most rapidly there \cite{milicevic_quasi-cyclic_2018}.
+Through the empirical 8D mapping, this SNR window corresponds to measured
+pre-correction BER in approximately $[0.015, 0.499]$; LDPC data is therefore
+absent from plots below $q \approx 0.015$. A representative configuration is
+provided in Appendix~\ref{chap:appendix-config}.
 
 CASCADE operating points are generated separately over requested BSC error
 rates. These runs are later matched to LDPC points using the measured
@@ -933,12 +944,19 @@ mission context.
 
 This chapter presents the measured reconciliation results and then interprets
 them using the feasibility model defined in
-Chapter~\ref{cha:methodology}. Each operating point was evaluated over repeated
-independent trials; the reported values are means with sample standard
-deviations unless otherwise stated.
+Chapter~\ref{cha:methodology}.
 
 \section{Part I: Algorithmic Results}
 \label{sec:results-part1}
+
+For readability, comparison plots use pre-correction BER as the primary x-axis
+and a secondary SNR axis on top. The SNR axis uses the empirical LDPC mapping
+measured in the CV-QKD pipeline (see Section~\ref{subsec:meth-verification} and
+Appendix~\ref{chap:appendix-verification}) rather than the standard BPSK relation
+$\tfrac12\mathrm{erfc}(\sqrt{\mathrm{SNR}})$ \cite{modulation_understanding_nodate}, because the 8D multidimensional
+reconciliation preprocessor produces a measurably different SNR-to-BER curve
+\cite{leverrier_multidimensional_2008}. Each point is a mean over $10^4$ independent
+trials with ±1$\sigma$ shaded bands where shown.
 
 \subsection{Efficiency}
 \label{subsec:results-efficiency}
