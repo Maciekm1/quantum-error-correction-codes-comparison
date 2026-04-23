@@ -65,10 +65,16 @@
 \renewcommand\familydefault{\sfdefault} 
 \usepackage[T1]{fontenc}
 \usepackage{amsmath}
+\usepackage{amssymb}
 
 \usepackage{subcaption}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{array}
 
 \lstdefinestyle{appendixcode}{
   basicstyle=\ttfamily\small,
@@ -89,7 +95,7 @@
 %\WarningFilter{biblatex}{File 'british-ieee.lbx'} %The warning is benign and can be ignored (issue since biblatex-ieee version 1.3).
 %\WarningFilter{biblatex}{File 'english-ieee.lbx'}%The warning is benign and can be ignored (issue since biblatex-ieee version 1.3).
 
-\RequirePackage[style=ieee,backend=biber]{biblatex}
+\RequirePackage[style=ieee,sorting=none,backend=biber]{biblatex}
 
 
 
