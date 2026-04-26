@@ -112,7 +112,7 @@ More plots in the same folder (e.g. FER, timings, SNR–BER mapping, zooms).
 |-----------|----------------|
 | **Cascade-cpp** | [brunorijsman/cascade-cpp](https://github.com/brunorijsman/cascade-cpp) (vendored/forked here with local `Makefile` tweaks). |
 | **cvqkd-reconciliation** | Quantum Communications Hub / SPOQC-oriented CV-QKD reconciliation library; Hub-supervised use. Statistics NDJSON extension is intended to ship with the mission codebase. |
-| **SPOQC / HOGS** | 12U CubeSat and ground segment context for CV-QKD from space (see dissertation references). |
+| **SPOQC / HOGS** | 12U CubeSat and ground segment context for CV-QKD from space. See [website]([url](https://www.quantumcommshub.net/research-community/about-the-hub/phase-2/work-package-5/the-hubs-spoqc-mission/)).  |
 
 ---
 
