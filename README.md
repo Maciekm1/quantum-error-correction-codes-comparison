@@ -8,7 +8,7 @@
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
 [![Python 3](https://img.shields.io/badge/python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.10+-064F8C?logo=cmake&logoColor=white)](https://cmake.org/)
-[![University of York](https://img.shields.io/badge/University%20of%20York-Dissertation%202026-b31b1b)](https://www.york.ac.uk/)
+[![University of York](https://img.shields.io/badge/University%20of%20York-Dissertation%202026-FFFFFF?labelColor=000000)](https://www.york.ac.uk/)
 
 *Author: **Maciek Zaweracz** · Supervisor: Dr Adrian Bors · BSc Computer Science*
 
@@ -178,7 +178,7 @@ Efficiency is computed compatibly with the Shannon reference for a BSC using the
 
 ## Acknowledgements
 
-Supervision: **Dr Adrian Bors** (University of York). Quantum communications context: **Dr Rupesh Kumar**. Systems and implementation guidance: **Killian Murphy**. SPOQC / LDPC matrix design: SPOQC team (acknowledged in the thesis). Cascade-cpp: **Bruno Rijsman** and contributors.
+Supervision: **Dr Adrian Bors** (University of York). Quantum communications context: **Dr Rupesh Kumar**. Systems and implementation guidance: **Killian Murphy**. SPOQC / LDPC matrix design: SPOQC team (acknowledged in the dissertation). Cascade-cpp: **Bruno Rijsman** and contributors.
 
 ---
 
