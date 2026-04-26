@@ -4,11 +4,11 @@
 
 **LDPC vs. Cascade information reconciliation for continuous-variable QKD under CubeSat-style constraints**
 
-[![University of York](https://img.shields.io/badge/University%20of%20York-Dissertation%202026-FFFFFF?labelColor=00599C)](https://www.york.ac.uk/)
-[![C11](https://img.shields.io/badge/C-11-00599C?logo=c&logoColor=white)](https://en.wikipedia.org/wiki/C11_(C_standard_revision))
-[![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
-[![Python 3](https://img.shields.io/badge/python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![CMake](https://img.shields.io/badge/CMake-3.10+-064F8C?logo=cmake&logoColor=white)](https://cmake.org/)
+[![University of York](https://img.shields.io/badge/University%20of%20York-Dissertation%202026-00599C?labelColor=555555)](https://www.york.ac.uk/)
+[![C11](https://img.shields.io/badge/C-11-00599C?labelColor=555555&logo=c&logoColor=white)](https://en.wikipedia.org/wiki/C11_(C_standard_revision))
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?labelColor=555555&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
+[![Python 3](https://img.shields.io/badge/python-3.10+-00599C?labelColor=555555&logo=python&logoColor=white)](https://www.python.org/)
+[![CMake](https://img.shields.io/badge/CMake-3.10+-00599C?labelColor=555555&logo=cmake&logoColor=white)](https://cmake.org/)
 
 *Author: **Maciek Zaweracz** · Supervisor: Dr Adrian Bors · BSc Computer Science*
 
