@@ -2,7 +2,7 @@
 \addbibresource{dummyBib.bib}
 \author{Maciek Zaweracz}
 \title{A Comparative Study on Error Correction Algorithms for LEO-Based CubeSats}
-\date{20 April 2026}
+\date{25 April 2026}
 \supervisor{Adrian Bors}
 \BSc
 
@@ -33,20 +33,20 @@ Finally, I would like to thank my family and friends for their love, support, an
 
 \begin{summary}
 
-Secure digital communication depends on two parties --- conventionally
-called Alice and Bob --- agreeing on a shared secret key without
+Secure digital communication depends on two parties (conventionally
+called Alice and Bob) agreeing on a shared secret key without
 leaking any of it to an adversary (Eve). Today this is done using
 classical cryptography whose security rests on mathematical hardness
 assumptions that sufficiently powerful quantum computers are expected
-to break. Quantum Key Distribution (QKD) replaces those assumptions
+to break \cite{WRIGHT200013}. Quantum Key Distribution (QKD) replaces those assumptions
 with security grounded in quantum mechanics: any attempt by Eve to
 measure the quantum states Alice sends to Bob inevitably disturbs
 them, and the legitimate parties can detect this disturbance
 \cite{grosshans_continuous_2002, laudenbach_continuous-variable_2018}.
 Because optical fibre loses signal rapidly over long distances, global
 QKD is expected to rely on satellites in Low Earth Orbit (LEO).
-CubeSats --- small standardised spacecraft on the order of 10\,kg
-\cite{oi_cubesat_2017} --- offer a low-cost entry point but impose
+CubeSats, small standardised spacecraft on the order of 10\,kg
+\cite{oi_cubesat_2017}, offer a low-cost entry point but impose
 tight constraints on size, weight, power, onboard compute, memory and
 classical communication bandwidth.
 
@@ -54,14 +54,16 @@ This dissertation is set in the context of the Satellite Platform for
 Optical Quantum Communications (SPOQC), the Quantum Communications
 Hub's 12U CubeSat that will demonstrate Continuous-Variable QKD
 (CV-QKD) from space to a ground station at Heriot-Watt University
-\cite{noauthor_hubs_nodate, simmons_hogs_2025}. CV-QKD is the variant
-of QKD that uses standard telecom optics and therefore fits best into
-a constrained satellite platform, but it also places the largest
+\cite{noauthor_hubs_nodate, simmons_hogs_2025}. CV-QKD uses standard 
+telecom optics and is therefore attractive for constrained
+satellite platforms, but it also places the largest
 burden on classical post-processing. The dominant post-processing cost
 is \textit{information reconciliation}: the step in which Alice and
-Bob, having ended up with noisy near-copies of the same bit-string,
-correct their disagreements over a public classical channel without
-handing their key to Eve \cite{mueller_performance_2025}. Two
+Bob, having ended up with noisy copies of the same bit-string,
+correct their inconsistencies over a public classical channel without
+revealing information to Eve \cite{mueller_performance_2025}. 
+
+Two
 reconciliation families dominate the literature. \textit{Low-Density
 Parity-Check (LDPC)} codes are a one-way coding approach in which Bob
 sends a compact parity message and Alice corrects locally.
@@ -89,7 +91,7 @@ at a representative low-SNR operating point
 and 100\,MHz), two candidate classical links (Radio-Frequency X-band
 and optical), and three onboard compute paces.
 
-Two structural findings emerge. First, LDPC and Cascade cross over in
+Two findings emerge. First, LDPC and Cascade cross over in
 reconciliation efficiency partway through the BER range ($q\!\approx\!0.22$): Cascade is
 close to the Shannon limit at low BER, LDPC pulls ahead at higher BER,
 and the LEO-relevant low-SNR regime sits firmly on LDPC's side.
@@ -239,150 +241,158 @@ The dissertation is structured as follows:
 
 CubeSats are standardised small satellites built from multiples of a
 $10 \times 10 \times 10\,\text{cm}$ unit (1U) \cite{oi_cubesat_2017}. They
-substantially reduce development time and launch cost compared with conventional
-spacecraft, at the price of strict size, weight and power (SWaP) budgets that
-limit payload volume, antenna size, thermal control, onboard memory and
-processor capability \cite{oi_cubesat_2017, sivasankaran_cubesat_2022,
-bouzoukis_overview_2025}. LEO operation adds a time-critical dimension: contact
-with a fixed ground station occurs in short, intermittent passes whose link
-quality varies with elevation, atmospheric path length, antenna geometry and
-pointing accuracy \cite{oi_cubesat_2017, jordan-parra_evaluation_2024}. Reference
-mission reports of university-led CubeSats in the 2U--6U class
-commonly observe around three passes per day of at most 12 minutes each
-above a minimum-elevation threshold, giving a narrow operational
-envelope for any onboard processing task
-\cite{nieto-peroy_cubesat_2019}. Space
-QKD missions require both a quantum optical link and a classical communication
-link, so any reconciliation method must fit within practical limits on pass
-duration, bandwidth, latency, onboard compute and memory --- constraints that
-are particularly binding on 6U--12U platforms \cite{simmons_hogs_2025}.
+reduce development time and launch cost compared with conventional spacecraft,
+but impose strict size, weight and power (SWaP) limits on payload volume,
+antenna size, thermal control, onboard memory and processor capability
+\cite{oi_cubesat_2017, sivasankaran_cubesat_2022, bouzoukis_overview_2025}.
+They are commonly deployed in Low Earth Orbit (LEO), where launch and
+deployment are comparatively accessible for small missions, often through
+rideshare or piggyback opportunities alongside larger spacecraft
+\cite{woellert_cubesats_2011, nieto-peroy_cubesat_2019}.
 
-% % ---------------------------------------------------------
-% \section{Information Theory}
-% \label{sec:bg-info-theory}
-% % ---------------------------------------------------------
+LEO, commonly between about $500$ and $1500$\,km
+\cite{Maral_LEO_1991}, adds a time-critical constraint: contact with a fixed
+ground station occurs in short, intermittent passes whose quality depends on
+elevation, atmospheric path length, antenna geometry and pointing accuracy
+\cite{oi_cubesat_2017, jordan-parra_evaluation_2024}. University-led CubeSat
+missions in the 2U--6U class commonly report around three passes per day of at
+most 12 minutes each above a minimum-elevation threshold, giving a narrow
+operational window for onboard processing \cite{nieto-peroy_cubesat_2019}.
+Space QKD missions require both a quantum optical link and a classical
+communication link, so reconciliation must fit within limits on pass duration,
+bandwidth, latency, onboard compute and memory, which are especially binding on
+6U--12U platforms \cite{simmons_hogs_2025}.
 
-% Information theory, established by Claude Shannon, formalises how uncertainty is quantified,
-% how noise affects communication, and how much information must be exchanged
-% to recover a message reliably \cite{mackay_information_nodate, shannon1948mathematical}. For a binary
-% variable with error probability $p$, the binary entropy function
-% \begin{equation}
-% H_2(p) = -p \log_2 p - (1-p)\log_2(1-p)
-% \end{equation}
-% gives the asymptotic lower bound on the number of bits that must be revealed
-% to correct errors on a binary symmetric channel (BSC) \cite{shannon1948mathematical}. In QKD every such bit
-% is assumed known to the eavesdropper and therefore reduces the final secret-key
-% length. In binary QKD the post-sifting channel is typically modelled as a BSC;
-% in CV-QKD the underlying physical channel is continuous-valued and more
-% naturally described by a Gaussian noise model
-% \cite{laudenbach_continuous-variable_2018}. This distinction matters for
-% reconciliation: CV-QKD carries soft reliability information that one-way codes
-% such as LDPC can exploit, whereas interactive protocols such as Cascade operate
-% on hard binary decisions \cite{leverrier_multidimensional_2008,
-% milicevic_quasi-cyclic_2018, martinez-mateo_demystifying_2015,
-% reis_quantum_2019}.
+CubeSats have also moved from a niche educational format to a mainstream LEO
+mission architecture. Kulu's 2024 survey reports 2505 launched CubeSats by
+September 2024, including a record 359 in 2023; it also notes that the second
+thousand launched CubeSats was reached in roughly four years, compared with
+almost sixteen years for the first thousand \cite{kulu_cubesats_2024}. Recent
+reviews describe CubeSat use across Earth observation, communications, science
+and technology-validation missions \cite{bouzoukis_overview_2025}. For this
+dissertation, the relevance is that CubeSats make compact LEO optical quantum
+communication platforms realistic, but post-processing must still fit within
+short passes, limited onboard storage, restricted processor capability and
+intermittent classical-link availability.
 
 % ---------------------------------------------------------
 \section{Quantum Key Distribution}
 \label{sec:bg-qkd}
 % ---------------------------------------------------------
 
-QKD establishes a shared secret key between Alice and Bob using quantum states
-as information carriers. Its security rests on the fact that any eavesdropper
-measurement introduces detectable disturbance
-\cite{grosshans_continuous_2002, laudenbach_continuous-variable_2018}.
+Quantum Key Distribution (QKD) establishes a shared secret key between Alice
+and Bob using quantum states as information carriers. Its security rests on
+the fact that any eavesdropper measurement introduces detectable disturbance
+\cite{grosshans_continuous_2002, laudenbach_continuous-variable_2018}. QKD is
+therefore attractive for long-term secure communications in settings where
+classical public-key assumptions may become vulnerable.
 
 The two main QKD families are discrete-variable (DV) and continuous-variable
-(CV). DV-QKD encodes information in discrete quantum states (e.g.\ photon
-polarisation or phase) and typically relies on single-photon detectors, which
-are difficult to accommodate on constrained satellite platforms. CV-QKD instead
-encodes information in the continuous quadrature amplitudes of coherent states
-and recovers them using homodyne or heterodyne detection with standard telecom
-optics, avoiding the DV detector infrastructure
-\cite{laudenbach_continuous-variable_2018}. This dissertation focuses on
-Gaussian-Modulated Coherent-State (GMCS) CV-QKD: Alice modulates coherent states
-according to a Gaussian distribution and Bob measures them by homodyne
-detection, which avoids squeezed or entangled light and supports high-speed,
-multi-bit-per-pulse operation
-\cite{grosshans_continuous_2002, grosshans_quantum_2003}. Practical GMCS implementations have demonstrated
-operation at source rates of hundreds of MHz using commercially available
-GHz-bandwidth balanced homodyne detectors
-\cite{tang_performance_2020}, bracketing the 2--100\,MHz source-rate range
-considered in this work.
+(CV). DV-QKD encodes information in discrete quantum states, such as photon
+polarisation or phase, and typically relies on single-photon sources, detectors
+and precise timing systems \cite{bennett_quantum_1984, Gisin_2002}. These requirements are well established in
+satellite QKD, but they can add detector, timing and payload complexity on
+constrained spacecraft. CV-QKD instead encodes information in the continuous
+quadrature amplitudes of coherent states and recovers them using homodyne or
+heterodyne detection with telecom-style coherent receivers
+\cite{laudenbach_continuous-variable_2018}. This makes CV-QKD attractive for
+CubeSat missions because it avoids much of the single-photon detector
+infrastructure associated with DV systems. This dissertation focuses on Gaussian-Modulated
+Coherent-State (GMCS) CV-QKD: Alice modulates coherent states according to a
+Gaussian distribution and transmits them over the optical quantum channel, while
+Bob measures the received states by homodyne detection
+\cite{grosshans_continuous_2002, grosshans_quantum_2003}. The source rate is
+the rate at which Alice sends these quantum states into the channel, so it
+directly controls both the raw data volume and the reconciliation workload.
+Practical GMCS implementations have demonstrated operation at source rates of
+hundreds of MHz using commercially available GHz-bandwidth balanced homodyne
+detectors \cite{tang_performance_2020}, bracketing the 2--100\,MHz source-rate
+range considered in this work.
+
+Across both DV and CV families, QKD follows the same broad post-processing
+logic: quantum transmission is followed by parameter estimation, information
+reconciliation and privacy amplification over an authenticated classical
+channel \cite{laudenbach_continuous-variable_2018, grosshans_quantum_2003}.
+CV-QKD adds digitisation of continuous outcomes and a reconciliation-specific
+preprocessing stage before binary IR algorithms can be applied. The GMCS
+CV-QKD pipeline used in this dissertation is described below.
 
 \subsection{The CV-QKD Process and Reverse Reconciliation}
 \label{subsec:bg-cvqkd-process}
 
-A CV-QKD pipeline consists of six stages: Alice transmits Gaussian-modulated
-coherent states; Bob performs coherent detection; a subset of the data is used
-for parameter estimation; the continuous observations are mapped to binary
-variables using multidimensional reconciliation
-\cite{leverrier_multidimensional_2008}; an information reconciliation protocol
-removes mismatches between Alice's and Bob's correlated keys; and privacy
-amplification compresses the reconciled key. Unlike DV-QKD, CV-QKD does not
-produce a binary raw key directly, which makes reconciliation particularly
-demanding. In \emph{direct} reconciliation Bob corrects his data to match
-Alice; in \emph{reverse} reconciliation Alice corrects her data to match Bob.
-Reverse reconciliation is necessary in high-loss channels such as space-to-ground
-links because it preserves a positive key rate where direct reconciliation
-fails \cite{grosshans_continuous_2002, grosshans_quantum_2003}. It fixes the
-direction of the classical communication and places the decoding task onboard
-the satellite --- the intersection at which reconciliation cost meets CubeSat
-mission constraints \cite{mueller_performance_2025}.
+A CV-QKD pipeline consists of six stages: 
+\begin{enumerate}
+    \item Alice (CubeSat) transmits Gaussian-modulated coherent states;
+    \item Bob (Ground Station) performs coherent detection;
+    \item a subset of the data is used for parameter estimation;
+    \item the continuous observations are mapped to binary variables using multidimensional reconciliation \cite{leverrier_multidimensional_2008};
+    \item an information reconciliation protocol removes mismatches between Alice's and Bob's correlated keys; 
+    \item privacy amplification compresses the reconciled key.
+\end{enumerate}
+Unlike DV-QKD, CV-QKD does not produce a binary raw key directly, which makes
+reconciliation particularly demanding. In \emph{direct} reconciliation, Bob
+corrects his data to match Alice; in \emph{reverse} reconciliation, Alice
+corrects her data to match Bob. Reverse reconciliation is necessary in
+high-loss channels such as space-to-ground links because it preserves a
+positive key rate where direct reconciliation fails
+\cite{grosshans_continuous_2002, grosshans_quantum_2003}. Under the downlink
+scenario considered in this dissertation, reverse reconciliation makes Bob's
+ground-station data the reference, so Alice's satellite-side data must be
+corrected to match Bob's measurements. This places the decoding task on the
+satellite side and makes reconciliation a direct CubeSat resource constraint
+\cite{mueller_performance_2025}.
 
-% =========================================================
-% \chapter{Literature Review}
-% \label{cha:literature}
-% =========================================================
-
+% ---------------------------------------------------------
 \section{Space QKD and Past CubeSat Missions}
 \label{sec:lit-space}
+% ---------------------------------------------------------
 
 Satellite QKD is motivated by the distance limitations of terrestrial optical
-fibre. 
-While fibre-based QKD is effective over metropolitan and inter-city
+fibre. While fibre-based QKD is effective over metropolitan and inter-city
 scales, global secure communication requires methods that avoid the high
 attenuation of long fibre links. Free-space optical channels therefore provide
 an important route towards long-distance quantum-secure communication
 \cite{lauterbach_study_2023}.
 
-A major milestone in the space QKD area was the \textit{Micius} satellite, which
-demonstrated long-distance satellite-to-ground QKD, at a distance of up to 1200km, and established the
-practical viability of space-based quantum links
-\cite{lauterbach_study_2023, lu_micius_2022}. It was the world's first quantum satellite mission, 
-and although it differed significantly from a regular CubeSat platform, weighing over 600kg, 
-it showed that quantum communication can be sustained over free-space paths far beyond the range 
-typically achievable in fibre.
+A major milestone in the space QKD area was the \textit{Micius} satellite,
+which demonstrated long-distance satellite-to-ground QKD at distances of up
+to 1200\,km and established the practical viability of space-based quantum
+links \cite{lauterbach_study_2023, lu_micius_2022}. Although Micius was not a
+CubeSat-class mission, with a spacecraft mass of over 600\,kg, it showed that
+quantum communication can be sustained over free-space paths far beyond the
+range typically achievable in fibre.
 
 CubeSat-oriented work instead considers whether space QKD can be realised
-within the mass, volume, power, and operational limits of a nanosatellite.
-The CQuCoM concept makes these constraints explicit through a 6U CubeSat in
-an approximately 10\,kg, 6\,L envelope, with platform power around 11\,W, a
+within the mass, volume, power and operational limits of a nanosatellite. The
+CQuCoM concept makes these constraints explicit through a 6U CubeSat in an
+approximately 10\,kg, 6\,L envelope, with platform power around 11\,W, a
 30\,Wh battery, a 90\,mm transmit telescope, and quantum passes limited to
 night-time eclipse opportunities of about 6 minutes on average
 \cite{oi_cubesat_2017}. This shows that feasibility depends not only on the
-optical protocol, but also on whether pointing, power storage, and pass
-duration can be made compatible with quantum transmission. Canada's Quantum Encryption and Science Satellite (QEYSSat), 
-set to launch in 2026, aims to address the same problem from a different systems perspective \cite{agency_quantum_2017}. 
-It uses a LEO trusted-node architecture with the satellite primarily as a receiver for
-ground-to-space uplinks, shifting source complexity and much of the processing
-burden to the ground segment \cite{podmore_qkd_2021}.
+optical protocol, but also on whether pointing, power storage and pass duration
+can be made compatible with quantum transmission. Canada's Quantum Encryption
+and Science Satellite (QEYSSat), planned for launch in 2026--27, addresses
+the same problem from a different systems perspective \cite{agency_quantum_2017}.
+It uses a LEO trusted-node architecture with the satellite primarily as a
+receiver for ground-to-space uplinks, shifting source complexity and much of
+the processing burden to the ground segment \cite{podmore_qkd_2021}.
 
-These studies establish the feasibility and strategic relevance of space
-QKD, but they do not directly answer how a resource-constrained CubeSat
-should select a reconciliation strategy when compute, memory, bandwidth and
-latency are treated as mission-level constraints
-\cite{jordan-parra_evaluation_2024}. This issue is especially important for
-SPOQC, which provides a concrete CubeSat-oriented CV-QKD mission context. Because CV-QKD requires continuous
+These studies establish the feasibility and strategic relevance of space QKD,
+but they do not directly answer how a resource-constrained CubeSat should
+select a reconciliation strategy when compute, memory, bandwidth and latency
+are treated as mission-level constraints \cite{jordan-parra_evaluation_2024}.
+This issue is especially important for SPOQC, which provides a concrete
+CubeSat-oriented CV-QKD mission context. Because CV-QKD requires continuous
 measurement outcomes to be converted into shared binary secret keys, the
-choice of reconciliation protocol becomes a central systems question. Recent
-SPOQC/HOGS material indicates losses of up to around 50~dB and key rates on
-the order of 100~bits/s, suggesting that mission feasibility may depend not
-only on optical performance but also on the cost and behaviour of the
-reconciliation stage \cite{noauthor_hubs_nodate, simmons_hogs_2025}.
+choice of reconciliation protocol becomes a central systems question. Recent 
+SPOQC/HOGS material indicates losses up to around 50~dB and key rates on
+the order of 100~bits/s, making reconciliation cost part of mission feasibility
+\cite{noauthor_hubs_nodate, simmons_hogs_2025}.
 
+% ---------------------------------------------------------
 \section{Information Reconciliation Approaches}
 \label{sec:lit-reconciliation}
+% ---------------------------------------------------------
 
 QKD reconciliation is dominated by two approaches: interactive protocols such
 as Cascade, and code-based protocols such as LDPC, each with distinct
@@ -394,18 +404,17 @@ partitioning, parity comparison and binary search
 \cite{martinez-mateo_demystifying_2015, reis2019quantum}, and its cost and
 leakage depend strongly on channel conditions and configuration
 \cite{reis2019quantum, tupkary_using_2023}. Mart\'inez-Mateo et al.\ report
-$f_{\mathrm{EC}} = 1.09013$ at a pre-correction Bit Error Rate (BER) of
-$Q = 2\%$ ($\mathrm{SNR}\!\approx\!6.0$) and $f_{\mathrm{EC}} = 1.09541$ at
-$Q = 5\%$ ($\mathrm{SNR}\!\approx\!3.5$) for $10^{4}$-bit frames, at the
-price of tens to over a hundred channel uses per frame depending on the
-Quantum BER (QBER) \cite{martinez-mateo_demystifying_2015}. At higher BER,
-improved efficiency typically costs substantially more interaction
-\cite{martinez-mateo_demystifying_2015}, which matters here because low-SNR
-CV-QKD can produce effective binary channels in regimes where communication
-overhead and leakage become major practical costs. Refinements such as
-Pacher et al.'s feedback protocol with power-of-two parity weights
-reduce leakage to $\eta_{\mathrm{IR}}\!<\!1.03$ across the full BSC range
-\cite{pacher_information_2015}, but only the original 4-pass variant is
+error-correction efficiency $f_{\mathrm{EC}} = 1.09013$ at a pre-correction
+Bit Error Rate (BER) of $Q = 2\%$ and $f_{\mathrm{EC}} = 1.09541$ at
+$Q = 5\%$ for $10^{4}$-bit frames, with tens to over a hundred channel uses
+per frame depending on the Quantum BER (QBER)
+\cite{martinez-mateo_demystifying_2015}. Here $f_{\mathrm{EC}}$ measures
+reconciliation leakage relative to the Shannon limit, so values closer to one
+are better. This matters because low-SNR CV-QKD can produce effective binary
+channels where interaction and leakage become major practical costs.
+Refinements such as Pacher et al.'s feedback protocol with power-of-two parity
+weights reduce leakage to $\eta_{\mathrm{IR}}\!<\!1.03$ across the full BSC
+range \cite{pacher_information_2015}, but only the original 4-pass variant is
 evaluated here (see Section~\ref{sec:limitations}).
 
 LDPC reconciliation replaces repeated two-way parity exchange with one-way
@@ -416,32 +425,40 @@ making it well suited to multidimensional reconciliation and low-SNR settings
 \cite{leverrier_multidimensional_2008, milicevic_quasi-cyclic_2018}. Slice
 reconciliation with LDPC has been used to push CV-QKD efficiency above 90\%
 at SNR as low as 0.03 \cite{jouguet_high-bit-rate_2014}, confirming the
-relevance of the low-SNR regime targeted in this work. The literature
-contains many variants, including blind and rate-adaptive methods
-for uncertain channels \cite{gumus_novel_2021, mueller_performance_2025},
-and other one-way code families such as rateless spinal codes have been
-proposed as alternatives reaching $\sim\!96.5\%$ efficiency at similarly low
-SNR \cite{wen_novel_2019}; these all share the same basic profile of high
-efficiency and low communication overhead, but with performance that depends
-on code selection, large block lengths and sufficient compute
-\cite{milicevic_quasi-cyclic_2018, gumus_novel_2021}.
+relevance of the low-SNR regime targeted in this work. The literature contains
+many variants, including blind and rate-adaptive methods for uncertain
+channels \cite{gumus_novel_2021, mueller_performance_2025}, while other
+one-way code families such as rateless spinal codes have been proposed as
+alternatives reaching $\sim\!96.5\%$ efficiency at similarly low SNR
+\cite{wen_novel_2019}. Within LDPC, quasi-cyclic (QC) constructions are
+important for implementation: they lift a small sparse base parity-check
+matrix by circulant shifts of identity blocks, giving a regular structure that
+is easy to store and parallelises cleanly in iterative decoders while still
+performing strongly in low-SNR CV-QKD \cite{milicevic_quasi-cyclic_2018}.
+These approaches share the same broad profile of high efficiency and low
+communication overhead, but their performance depends on code selection, large
+block lengths and sufficient compute \cite{milicevic_quasi-cyclic_2018,
+gumus_novel_2021}. All LDPC variants compared in this dissertation are
+quasi-cyclic.
 
+% ---------------------------------------------------------
 \section{Comparative Literature and Research Gap}
 \label{sec:lit-comparative}
+% ---------------------------------------------------------
 
 Direct comparisons between Cascade and LDPC are less common than studies of
 each protocol individually, and existing ones depend strongly on channel
-model, QKD protocol, hardware assumptions and chosen metrics. Mueller et
-al.\ show that communication rounds, verification cost, classical-channel
-behaviour and robustness to parameter mismatch can all change the relative
-attractiveness of a protocol, and that protocol assessment should be
-application-oriented --- their own comparison is restricted to DV-QKD and
-$Q \le 0.10$ ($\mathrm{SNR}\!\approx\!2.0$), which does not cover the low-SNR
-CV-QKD regime relevant here \cite{mueller_performance_2025,
-jordan-parra_evaluation_2024}. A second consistent lesson is that successful
-reconciliation does not automatically imply useful key generation: a protocol
-may correct errors while revealing too much information, or requiring too much
-communication, for a secret key to remain after privacy amplification
+model, QKD protocol, hardware assumptions and chosen metrics. Mueller et al.\
+show that communication rounds, verification cost, classical-channel behaviour
+and robustness to parameter mismatch can all change the relative attractiveness
+of a protocol, and that protocol assessment should be application-oriented.
+Their own comparison is restricted to DV-QKD and $Q \le 0.10$
+($\mathrm{SNR}\!\approx\!2.0$), which does not cover the low-SNR CV-QKD regime
+relevant here \cite{mueller_performance_2025, jordan-parra_evaluation_2024}.
+A second consistent lesson is that successful reconciliation does not
+automatically imply useful key generation: a protocol may correct errors while
+revealing too much information, or requiring too much communication, for a
+secret key to remain after privacy amplification
 \cite{mueller_performance_2025, tupkary_using_2023}.
 
 Four aspects of this literature define the gap addressed by this dissertation.
@@ -450,13 +467,14 @@ binary channel models rather than reverse-reconciliation CV-QKD with
 soft-information preprocessing. Second, the low-SNR regime characteristic of
 free-space CV-QKD is not where Cascade is usually most attractive. Third,
 existing studies rarely translate reconciliation behaviour into a CubeSat
-mission model with explicit limits on pass duration, bandwidth, latency,
-memory and onboard compute. Fourth, many of the strongest LDPC results assume
-hardware acceleration or very large block lengths that are not obviously
-representative of a CPU-only CubeSat platform
+mission model with explicit limits on pass duration, bandwidth, latency, memory
+and onboard compute. Fourth, many of the strongest LDPC results assume hardware
+acceleration or very large block lengths that are not obviously representative
+of a CPU-only CubeSat platform
 \cite{milicevic_quasi-cyclic_2018, mueller_performance_2025,
-jordan-parra_evaluation_2024, simmons_hogs_2025}. The methodology in
-Chapter~\ref{cha:methodology} is designed to close this gap.
+jordan-parra_evaluation_2024, simmons_hogs_2025}. This dissertation addresses that gap by comparing Cascade and QC-LDPC under a
+common CV-QKD-inspired error model, then mapping the measurements onto CubeSat
+communication, storage and compute constraints.
 
 % =========================================================
 \chapter{Methodology}
@@ -495,7 +513,7 @@ internal terms.
 
 The comparison basis used in this dissertation is the measured
 \textit{pre-correction BER}. On the LDPC side, SNR is swept through the full
-CV-QKD simulation path and the resulting hard decisions are used to measure
+CV-QKD simulation path, described in \ref{subsec:meth-pipelines}, and the resulting hard decisions are used to measure
 the actual BER seen before decoding. On the Cascade side, the requested BSC
 error rate is adjusted so that the measured BER aligns with the LDPC
 operating points. This preserves the CV-QKD interpretation on the LDPC side while
@@ -515,7 +533,7 @@ $t$ is effective channel transmittance, and $N$ is Gaussian noise. This AWGN
 form is the standard first-order abstraction for a free-space optical link, as it
 compresses physical loss into a single multiplicative factor $\sqrt{t}$ and all
 noise sources into a single Gaussian term, which is sufficient to drive
-reconciliation at a chosen operating point. The corresponding operating SNR is
+reconciliation at a chosen operating point \cite{e25091286}. The corresponding operating SNR is
 \begin{equation}
 \text{SNR} = \frac{t \sigma_X^2}{\sigma_n^2},
 \end{equation}
@@ -537,7 +555,7 @@ algorithmic behaviour from link-budget dynamics
 For LDPC, each experiment follows the same sequence:
 \begin{enumerate}
     \item Gaussian sample generation;
-    \item additive noise injection at the selected SNR;
+    \item additive noise injection at the selected SNR, using the Channel Model defined in \ref{subsec:meth-channel};
     \item 8-dimensional multidimensional reconciliation preprocessing;
     \item hard-decision bit mapping and syndrome generation;
     \item Min-Sum LDPC decoding.
@@ -551,28 +569,51 @@ produces both hard decisions and reliability information for decoding
 Cascade is evaluated separately on a binary symmetric channel. Each run applies
 the standard cycle of shuffling, block partitioning, parity exchange, binary
 search, and look-back correction \cite{martinez-mateo_demystifying_2015}. Cascade is therefore not driven directly by
-SNR, but by the measured BER used to align it to LDPC operating points.
+SNR, but by the measured BER used to align it to LDPC operating points. 
+Implementation details are given in Section~\ref{sec:meth-implementation}.
 
 \subsection{Recorded Metrics and Statistical Treatment}
 \label{subsec:meth-metrics}
 
-Seven quantities are recorded. Reconciliation efficiency measures how close
-the algorithm operates to the Shannon limit and is defined as $\eta = \mathrm{reconciliation\_bits}/(n \cdot H_2(q))$; here
-$H_2(q) = -q\log_2 q - (1-q)\log_2(1-q)$ is the binary entropy function,
-which gives the minimum number of bits per symbol
-that must be disclosed to reconcile a BSC with error probability $q$, so
-$\eta = 1$ is the Shannon limit and larger values indicate more leakage. 
-Pre-correction BER ($q$) serves both as a sanity check and as
-the alignment variable for joint LDPC/Cascade comparison. Remaining BER and
-FER quantify post-correction reliability; FER matters for LDPC because
-frame-level decoding failure is still possible.
-Reconciliation bits per key bit normalises classical communication overhead
-across frame sizes. Elapsed process and real time per key bit feed the Part~II
-compute model. Cascade message counts capture sequential parity exchanges for
-latency modelling. LDPC decoder iterations proxy decoding difficulty. Means
-and sample standard deviations are computed over $10^{4}$ independent trials
-per operating point; timing and communication metrics are normalised per key
-bit to compare 256--2048-bit LDPC frames fairly against 10\,000-bit Cascade
+Seven quantities are recorded:
+\begin{enumerate}
+    \item \textbf{Reconciliation efficiency} $\eta$ measures how close the
+    algorithm operates to the Shannon limit:
+    \begin{equation}
+        \eta =
+        \frac{\mathrm{reconciliation\_bits}}{n \cdot H_2(q)}.
+    \end{equation}
+    Here,
+    \begin{equation}
+        H_2(q) = -q\log_2 q - (1-q)\log_2(1-q)
+    \end{equation}
+    is the binary entropy function, giving the minimum number of bits per
+    symbol that must be disclosed to reconcile a BSC with error probability
+    $q$. Thus, $\eta = 1$ is the Shannon limit and larger values indicate
+    more leakage.
+
+    \item \textbf{Pre-correction BER} ($q$) serves both as a sanity check and
+    as the alignment variable for joint LDPC/Cascade comparison.
+
+    \item \textbf{Remaining BER and FER} quantify post-correction reliability.
+    FER matters for LDPC because frame-level decoding failure is still
+    possible.
+
+    \item \textbf{Reconciliation bits per key bit} normalises classical
+    communication overhead across frame sizes.
+
+    \item \textbf{Elapsed process and real time per key bit} feed the Part~II
+    compute model.
+
+    \item \textbf{Cascade message counts} capture sequential parity exchanges
+    for latency modelling.
+
+    \item \textbf{LDPC decoder iterations} proxy decoding difficulty.
+\end{enumerate}
+
+Means and sample standard deviations are computed over $10^{4}$ independent
+trials per operating point. Timing and communication metrics are normalised per
+key bit to compare 256--2048-bit LDPC frames fairly against 10\,000-bit Cascade
 keys \cite{martinez-mateo_demystifying_2015}.
 
 % ---------------------------------------------------------
@@ -587,11 +628,11 @@ Part~II converts the Part~I per-frame measurements into first-order resource
 requirements under representative LEO CubeSat constraints. It uses an algebraic
 check at one mission-relevant operating point; residual BER,
 FER, efficiency and post-privacy-amplification key rate are out of scope
-(See section~\ref{sec:future-work}).
+(see Section~\ref{sec:future-work}).
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.78\linewidth]{Overleaf-Dissertation-Files/Figures/overpass_fig.pdf}
+    \includegraphics[width=0.9\linewidth]{Overleaf-Dissertation-Files/Figures/overpass_fig.pdf}
     \caption{Overpass geometry used in the Part~II mission abstraction.
     The CubeSat traces an arc above the Optical Ground Station (OGS); the
     QKD-feasible window corresponds to a bounded elevation range symmetric
@@ -611,60 +652,124 @@ buffers her transmitted data and Bob (ground) measures and computes the side
 information; reconciliation runs in a separate classical window. Three source-rate cases are considered:
 2\,MHz (the SPOQC rate \cite{rao_quantum_2025}), 10\,MHz and 100\,MHz (upper-bound stress). 
 Two classical links are considered: an optical classical sidechannel
-$T_{\text{opt}} \approx 30$\,s at $\sim$1\,Gbps, and a Radio-Frequency (RF)
+$T_{\text{opt}} \approx 30$\,s at $\sim$1\,Gbps that occurs right after the quantum signal pass, and a Radio-Frequency (RF)
 X-band window $T_{\text{RF}} \approx 300$\,s at $\sim$50\,Mbps
-\cite{noauthor_hubs_nodate}. Onboard memory is capped at
+\cite{noauthor_hubs_nodate} which can occur every 90\,min. Onboard memory is capped at
 $M_{\max} \approx 125$\,GB. Free-space CV-QKD on a LEO link is expected to operate in the low-SNR
 region of roughly $[0.006, 0.07]$
 \cite{milicevic_quasi-cyclic_2018, noauthor_hubs_nodate}, which through
 the empirical 8D mapping (Section~\ref{subsec:meth-verification})
 corresponds to pre-correction BER near $q \approx 0.40$. All numerical
-claims are evaluated at $q = 0.40$ ($\mathrm{SNR}\!\approx\!0.07$), which
-sits at the upper edge of this window and therefore represents a
-conservatively high-BER (worst-case-leakage) operating point; $q = 0.10$
+claims are evaluated at $q = 0.40$ ($\mathrm{SNR}\!\approx\!0.07$), which represents a severe low-SNR reconciliation point while remaining at the
+higher-SNR end of the expected operating range; $q = 0.10$
 ($\mathrm{SNR}\!\approx\!2.0$) is retained only as a higher-SNR
 sensitivity reference.
+
+% \subsection{Time and Communication Model}
+% \label{subsec:meth-time-model}
+
+% Let $f_{\text{src}}$ be the source rate and $T_q = 120$\,s the quantum
+% window. The per-pass workload is
+% \begin{equation}
+% N = f_{\text{src}} \cdot T_q,
+% \end{equation}
+% where $N$ is the number of raw quantum symbols that must eventually be
+% reconciled from a single quantum pass. It sets the scale of every other
+% resource demand below.
+
+% Completion time is modelled to first order as
+% \begin{equation}
+% T_{\text{total}} \approx T_{\text{compute}} + T_{\text{tx}} + T_{\text{latency}},
+% \end{equation}
+% where $T_{\text{compute}}$ is local processing time, $T_{\text{tx}}$ is the
+% time needed to transmit reconciliation data over the classical channel, and
+% $T_{\text{latency}}$ is the waiting time caused by sequential message
+% exchanges. These terms are treated separately because LDPC is mainly limited
+% by decoding time and classical volume, while Cascade is also sensitive to
+% round-trip latency.
+
+% The compute term is estimated by scaling the measured Part~I per-bit CPU time
+% to the full pass workload:
+% \begin{equation}
+% T_{\text{compute}} = N \cdot t,
+% \end{equation}
+% where $t$ is the measured processing time per key bit or reconciled symbol.
+
+% Required classical volume is
+% \begin{equation}
+% B = N \cdot r,
+% \end{equation}
+% where $r$ is the reconciliation bits per key bit measured in Part~I. Thus,
+% $B$ is the total public-channel traffic generated by reconciliation and must
+% fit into the available classical link budget. For a link rate $R$, the serial
+% transmission time is
+% \begin{equation}
+% T_{\text{tx}} = \frac{B}{R}.
+% \end{equation}
+% Bandwidth feasibility is therefore
+% \begin{equation}
+% B \le R \cdot T_{\text{window}},
+% \end{equation}
+% for the relevant link window
+% $T_{\text{window}} \in \{T_{\text{opt}},T_{\text{RF}}\}$. This expresses the
+% simple requirement that the protocol cannot send more classical bits than the
+% link can carry in the time available.
+
+% Cascade's sequential interaction latency is
+% \begin{equation}
+% T_{\text{latency}} = N_{\text{seq}} \cdot \tau,
+% \end{equation}
+% where $N_{\text{seq}}$ is the number of sequential parity round-trips per frame
+% measured in Part~I, and $\tau$ is the per-round-trip delay. This is the latency
+% penalty paid by interactive protocols on top of raw transmission time. LDPC has
+% $N_{\text{seq}} = 1$ by construction because it uses one-way syndrome
+% transmission followed by local decoding. Whether Cascade latency is paid once
+% per frame under fully concurrent Cascade engines, giving a \emph{pipelined}
+% bound, or across all $N/n$ frames, giving a \emph{serial} bound, is treated as
+% a bounding question in Section~\ref{subsec:results-latency-feasibility}.
 
 \subsection{Time and Communication Model}
 \label{subsec:meth-time-model}
 
 Let $f_{\text{src}}$ be the source rate and $T_q = 120$\,s the quantum
-window. Per-pass workload is
+window. The per-pass workload is
 \begin{equation}
 N = f_{\text{src}} \cdot T_q,
 \end{equation}
-i.e.\ the number of raw quantum symbols that must eventually be reconciled
-from a single quantum pass; it sets the scale of every other resource demand
-below. Completion time is modelled to first order as
+where $N$ is the number of raw quantum symbols from one quantum pass.
+Completion time is modelled to first
+order as
 \begin{equation}
-T_{\text{total}} \approx T_{\text{compute}} + T_{\text{tx}} + T_{\text{latency}},
+T_{\text{total}} \approx T_{\text{compute}} + T_{\text{tx}} + T_{\text{latency}}.
 \end{equation}
-splitting end-to-end cost into three additive contributions: onboard
-processing, classical-link transmission, and the waiting time accumulated
-over sequential round-trips. Required classical volume is
+Here $T_{\text{compute}}$ is local processing time, $T_{\text{tx}}$ is serial
+classical transmission time, and $T_{\text{latency}}$ is waiting time caused by
+sequential message exchanges. These terms separate the main practical costs:
+LDPC is mainly limited by decoding time and classical volume, while Cascade is
+also sensitive to round-trip latency.
+
+The compute term scales the measured Part~I per-bit CPU time $t$ to the full
+pass workload, so $T_{\text{compute}} = Nt$. The required classical volume is
+$B = Nr$, where $r$ is the reconciliation bits per key bit measured in Part~I.
+For a link rate $R$, the serial transmission time is therefore
+$T_{\text{tx}} = B/R$. Bandwidth feasibility is
 \begin{equation}
-B = N \cdot r,
+B \le R T_{\text{window}},
 \end{equation}
-where $r$ is the reconciliation bits per key bit measured in Part~I; $B$ is
-therefore the total public-channel traffic a reconciliation run generates,
-and is what must fit into the available link budget.
-Bandwidth feasibility is $B \le R \cdot T_{\text{window}}$ for the
-relevant link rate $R$ and window
-$T_{\text{window}} \in \{T_{\text{opt}},T_{\text{RF}}\}$, expressing the
-simple requirement that the protocol cannot send more bits than the link
-can carry in the time available.
+for $T_{\text{window}} \in \{T_{\text{opt}},T_{\text{RF}}\}$, expressing the
+requirement that reconciliation cannot send more classical data than the link
+can carry in the available window.
+
 Cascade's sequential interaction latency is
 \begin{equation}
-T_{\text{latency}} = N_{\text{seq}}\,\tau,
+T_{\text{latency}} = N_{\text{seq}}\tau,
 \end{equation}
-the product of the number of sequential parity round-trips per frame
-$N_{\text{seq}}$ (measured in Part~I) and the per-round-trip delay $\tau$;
-this is the latency penalty interactive protocols pay on top of raw
-transmission time. LDPC has
-$N_{\text{seq}} = 1$ by construction. Whether $T_{\text{latency}}$ is
-paid once per frame (fully concurrent Cascade engines, \emph{pipelined}
-bound) or across all $N/n$ frames (\emph{serial} bound) is treated as
-a bounding question in
+where $N_{\text{seq}}$ is the number of sequential parity round-trips per frame
+measured in Part~I, and $\tau$ is the per-round-trip delay. LDPC has
+$N_{\text{seq}} = 1$ by construction because it uses one-way syndrome
+transmission followed by local decoding. Whether Cascade latency is paid once
+per frame under fully concurrent engines, giving a \emph{pipelined} bound, or
+across all $N/n$ frames, giving a \emph{serial} bound, is treated in
 Section~\ref{subsec:results-latency-feasibility}.
 
 \subsection{Latency Scenarios}
@@ -680,14 +785,12 @@ altitude \cite{conde_round_2024}).
 \label{subsec:meth-compute-scenarios}
 
 Part~I timings were measured on an Apple M1 Pro. Both reference
-implementations are scalar and single-threaded per reconciliation: the
-LDPC binary uses a single C process, and the Cascade core algorithm is
-single-threaded C++17. Neither uses the GPU,
-Neural Engine, explicit SIMD or multi-threading within one decode, so
-the figure reflects best-case single-core CPU behaviour rather than the
-peak capability of the silicon. Rescaling these timings to a
-specific flight processor without dedicated benchmarking would be
-speculative, so three generic compute-pace scenarios are used instead:
+implementations are scalar and single-threaded per reconciliation: LDPC runs as
+a single C process, while Cascade uses a single-threaded C++17 core. Neither
+uses the GPU, Neural Engine, explicit SIMD or intra-decode multi-threading, so
+the timings represent single-core CPU behaviour. 
+Rescaling to a flight processor without dedicated benchmarking, however,
+would be speculative, so three generic compute-pace scenarios are used instead:
 \begin{itemize}
     \item \textbf{Accelerated} ($0.1\times$ dev time) --- assisted by a
     Field-Programmable Gate Array (FPGA) or Digital Signal Processor (DSP),
@@ -698,25 +801,31 @@ speculative, so three generic compute-pace scenarios are used instead:
     (SBC) such as the Q8 Xiphos used on SPOQC; treated as a one-decade
     envelope rather than a Q8-specific benchmark.
 \end{itemize}
-Compute is checked against two windows: the classical window after the
-pass, and an extended multi-orbit budget
-$T_{\text{orbit}} \approx 24$\,h representing deferred processing across
-orbits. The former requires compute to finish before the key is
-downlinked; the latter accepts that compute runs to the next
-mission-relevant trigger, at the cost of a delayed key.
+Compute is checked against two windows. The first is the inter-pass RF
+cadence $T_{\text{90m}} \approx 5400$\,s (90\,min) --- a CubeSat in a
+typical LEO orbit sees an RF ground contact approximately every 90\,min
+irrespective of whether that pass is high-quality enough for optical QKD
+\cite{noauthor_hubs_nodate}, so this is the natural deadline for
+``compute finishes in time for the next classical downlink opportunity''
+and the key is delivered in the same day. The second is an extended
+multi-orbit budget $T_{\text{orbit}} \approx 24$\,h representing
+deferred processing until the next high-quality pass, at the cost of a
+delayed key.
 
 \subsection{Feasibility Criteria}
 \label{subsec:meth-feasibility}
 
-Each (algorithm, source-rate) combination is judged against four
-criteria:
+Each (algorithm, source-rate) combination is judged against four criteria,
+chosen because a CubeSat pass can fail in four independent ways: insufficient
+link capacity, excessive round-trip latency, insufficient compute time, or
+insufficient onboard memory.
 \begin{itemize}
-    \item \textbf{Bandwidth}: $B \le R \cdot T_{\text{window}}$ for the relevant link;
-    \item \textbf{Latency}: $T_{\text{latency}} \le T_{\text{window}}$ for each $\tau$ scenario;
-    \item \textbf{Compute}: $T_{\text{compute}} \le T_{\text{window}}$ for each pace scenario;
-    \item \textbf{Memory}: $N \cdot b_{\text{sym}} \le M_{\max}$, with $b_{\text{sym}} \approx 4$\,B per buffered sample.
+    \item \textbf{Bandwidth}: $B \le R \cdot T_{\text{window}}$ for the relevant link. This checks whether the classical traffic generated per key bit fits through the RF or optical link within the pass window.
+    \item \textbf{Latency}: $T_{\text{latency}} \le T_{\text{window}}$ for each $\tau$ scenario. This separates one-way LDPC from round-trip Cascade and indicates whether Cascade would require a low-RTT optical classical channel.
+    \item \textbf{Compute}: $T_{\text{compute}} \le T_{\text{window}}$ for each pace scenario. This captures whether onboard processing can finish within the relevant classical opportunity, especially on a slower CubeSat SBC.
+    \item \textbf{Memory}: $N \cdot b_{\text{sym}} \le M_{\max}$, with $b_{\text{sym}} \approx 4$\,B per buffered sample. This checks whether the quantum-window data can be retained for later reconciliation within the 125\,GB SPOQC memory budget.
 \end{itemize}
-These produce the pass/fail summary in
+These criteria produce the pass/fail summary in
 Section~\ref{subsec:results-feasibility-matrix}.
 
 % ---------------------------------------------------------
@@ -740,18 +849,17 @@ uses Min-Sum decoding on quasi-cyclic parity-check matrices. A matrix named
 \texttt{MxN\_zK} denotes a base parity-check matrix of shape $M \times N$
 expanded by a circulant lifting factor $z = K$, producing a final
 parity-check matrix of size $(Mz) \times (Nz)$ and therefore a frame length
-of $n = Mz$ bits per reconciliation. Three matrices are evaluated:
-\begin{itemize}
-    \item \texttt{256x255\_z1} — frame length $n = 256$ bits,
-    \item \texttt{512x511\_z4} — frame length $n = 2048$ bits,
-    \item \texttt{1024x1023\_z1} — frame length $n = 1024$ bits.
-\end{itemize}
-These are existing low-SNR matrices available in the SPOQC codebase and were
-selected as the study set for comparative testing. In the remainder of the
-dissertation LDPC variants are identified by their effective frame length
-(256, 1024, and 2048 bits) rather than by base-matrix name, since the frame
-length is what controls per-frame behaviour, statistics, and normalised
-metrics.
+of $n = Mz$ bits per reconciliation. Three matrices are evaluated: \texttt{256x255\_z1} (256 bit frame length), 
+\texttt{512x511\_z4} (2048 bit frame length) and \texttt{1024x1023\_z1} 
+(1024 bit frame length). These were produced by a genetic
+algorithm, developed by the SPOQC team 
+(E. Higgins, private communication, 2025--2026), optimising each base matrix for the lowest AWGN SNR at which
+random signal data still decodes without residual errors. The
+fittest matrices at each frame length were taken into the SPOQC codebase
+and form the study set used here. In the remainder of the dissertation
+LDPC variants are identified by their effective frame length (256, 1024,
+and 2048 bits) rather than by matrix name, since the frame length is
+what controls per-frame behaviour, statistics, and normalised metrics.
 
 Cascade is implemented using the open-source \texttt{Cascade-cpp} library
 \cite{rijsman_brunorijsmancascade-cpp_2026}. This implementation records
@@ -761,22 +869,20 @@ it suitable both for direct comparison and for later latency modelling.
 \subsection{Statistics Tracking Contribution}
 \label{subsec:meth-tracking}
 
-A key implementation contribution of this dissertation is the addition of a
-dedicated statistics-tracking system to the internal SPOQC LDPC repository.
+A key contribution of this dissertation is the addition of a
+dedicated statistics-tracking system to the internal SPOQC LDPC repository, written in the programming language C.
 The original \texttt{cvqkd-reconciliation} library was extended so that each
 operating point emits structured statistics in Newline-Delimited JSON
 (NDJSON) format. The output schema was designed to align closely with
 \texttt{Cascade-cpp}, so that both algorithms could be parsed and analysed
 through the same downstream workflow. The added tracking records the
 quantities defined in Section~\ref{subsec:meth-metrics}. For LDPC, these
-values are accumulated online over repeated independent frames using
-Welford's algorithm, which provides numerically stable running means and
-sample standard deviations without retaining all raw samples in memory. 
-This is useful for large sweeps and high
-trial counts, and it keeps the measurement layer lightweight enough to
-remain compatible with the existing SPOQC implementation. The tracked
-output fields for both implementations are summarised in
-Appendix~\ref{chap:appendix-output}.
+values are accumulated online over independent frames using Welford's
+algorithm, giving numerically stable running means and sample standard
+deviations without retaining raw samples and keeping the measurement
+layer lightweight enough to remain compatible with the existing SPOQC
+implementation. The tracked output fields for both implementations are
+summarised in Appendix~\ref{chap:appendix-output}.
 
 \subsection{Experiment Orchestration}
 \label{subsec:meth-orchestration}
@@ -795,6 +901,8 @@ is provided in Appendix~\ref{chap:appendix-config}. Cascade operating points
 are generated separately over requested BSC error rates and later matched
 to LDPC points using the measured pre-correction BER.
 
+The experiment runner, results and analysis can be found at: \url{https://github.com/Maciekm1/quantum-error-correction-codes-comparison}.
+
 \subsection{Verification}
 \label{subsec:meth-verification}
 
@@ -804,8 +912,10 @@ behaviour of the published \texttt{Cascade-cpp} reference and the
 Mart\'inez-Mateo et al.\ literature baseline
 \cite{martinez-mateo_demystifying_2015, mueller_performance_2025}. LDPC is
 verified by reproducing the internal SPOQC $1 - 2\cdot\mathrm{BER}$ reference
-curve, which exercises the Gaussian generator, multidimensional reconciliation
+curve, which exercises the Gaussian generator, multidimensional
 preprocessor, syndrome generator and Min-Sum decoder together.
+
+
 A separate alignment check compares the measured pre-correction BER values
 used in the matched LDPC/Cascade plots; any systematic mismatch here would
 indicate an error in the comparison procedure rather than in the
@@ -815,7 +925,7 @@ reference curve $\tfrac{1}{2}\mathrm{erfc}(\sqrt{\mathrm{SNR}})$, the
 canonical SNR-to-BER relationship for a hard-decision binary channel with
 Gaussian noise; the difference between the two is due to the 8-dimensional
 (8D) reconciliation preprocessor used in our experiments,
-so we use the measured mapping throughout our results. Supporting figures
+so we use the measured mapping throughout our results instead. Supporting figures
 are in Appendix~\ref{chap:appendix-verification}.
 
 % =========================================================
@@ -827,78 +937,57 @@ are in Appendix~\ref{chap:appendix-verification}.
 \label{sec:results-part1}
 
 Part~I runs LDPC and Cascade through the matched-BER protocol of
-Section~\ref{sec:meth-part1} and reports what each algorithm actually
-does under the same channel noise level. Five questions are then answered:
-\emph{how close to the information-theoretic leakage limit does
-each run} (efficiency), \emph{how often does the output key contain
-residual errors} (reliability), \emph{how much classical traffic does
-each generate} (overhead), \emph{how long does each take on a CPU}
-(compute), and \emph{how interactive is each} (messages per frame).
-Together these feed directly into the Part~II feasibility model. 
-
-For readability, comparison plots use pre-correction BER as the primary
-x-axis and a secondary SNR axis on top. The SNR axis uses the empirical
-LDPC mapping measured in the CV-QKD pipeline (see
-Section~\ref{subsec:meth-verification} and
-Appendix~\ref{chap:appendix-verification}). Each point is a
-mean over $10^4$ independent trials with ±1$\sigma$ shaded bands where
-shown.
+Section~\ref{sec:meth-part1} and answers five questions that feed
+directly into the Part~II feasibility model: how close to the
+Shannon leakage limit each runs (efficiency), how often the output key
+still contains errors (reliability), how much classical traffic each
+generates (overhead), how long each takes on a CPU (compute), and how
+interactive each is (messages per frame). Plots use pre-correction BER as
+the primary x-axis with an empirical-LDPC SNR axis on top
+(Section~\ref{subsec:meth-verification},
+Appendix~\ref{chap:appendix-verification}); each point is a mean of $10^4$
+trials with $\pm 1\sigma$ bands where shown.
 
 \FloatBarrier
 \subsection{Reconciliation Efficiency}
 \label{subsec:results-efficiency}
 
-Efficiency $\eta$ (defined in Section~\ref{subsec:meth-metrics}) measures
-how much more information each algorithm leaks over the classical channel
-than the information-theoretic minimum; $\eta = 1$ is the Shannon floor
-and smaller is better. It matters because this leakage is what the
-secret-key rate ultimately has to absorb.
-Figures~\ref{fig:efficiency-full}, \ref{fig:efficiency-zoom-2} and
-\ref{fig:efficiency-zoom} show reconciliation efficiency
-$\eta = \mathrm{reconciliation\_bits} / (n \cdot H_2(q))$ against matched
-pre-correction BER; the top SNR axis is the empirical LDPC mapping measured
-in the CV-QKD pipeline. Three observations follow from these curves.
+Efficiency $\eta$ (Section~\ref{subsec:meth-metrics}) measures
+classical-channel leakage relative to the Shannon floor ($\eta = 1$,
+smaller is better), and it is what the secret-key rate ultimately has to
+absorb \cite{braunstein2005quantum}. Figures~\ref{fig:efficiency-full}--\ref{fig:efficiency-zooms}
+show $\eta = \mathrm{reconciliation\_bits} / (n \cdot H_2(q))$ against
+matched pre-correction BER.
 
-First, in the low-BER regime canonically used to evaluate Cascade
-\cite{martinez-mateo_demystifying_2015}, Cascade is close to the Shannon limit
-while LDPC is heavily over-provisioned. Cascade reaches
-$\eta \approx 1.14$ at $q = 0.01$, $1.19$ at $q = 0.05$
-($\mathrm{SNR}\!\approx\!3.5$), and $1.21$ at $q = 0.10$
-($\mathrm{SNR}\!\approx\!2.0$); LDPC, whose syndrome is fixed by code rate,
-produces $\eta \approx 6.8\text{--}8.1$ at $q = 0.02$
-($\mathrm{SNR}\!\approx\!6.0$). The Cascade values lie a few percent above
-Mart\'inez-Mateo et al.'s 1.09 / 1.10 at $Q = 2\% / 5\%$
-\cite{martinez-mateo_demystifying_2015}, consistent with using the original
-4-pass variant without BICONF and Cascade-cpp's default block schedule \cite{martinez-mateo_demystifying_2015}.
+In the low-BER regime canonically used to evaluate Cascade, Cascade sits
+near the Shannon limit ($\eta \approx 1.14, 1.19, 1.21$ at
+$q = 0.01, 0.05, 0.10$) while LDPC's rate-fixed syndrome gives
+$\eta \approx 6.8\text{--}8.1$ at $q = 0.02$. Cascade is a few percent
+above Mart\'inez-Mateo et al.'s 1.09 / 1.10 at $Q = 2\%/5\%$, consistent
+with the original 4-pass variant without BICONF and Cascade-cpp's default
+block schedule \cite{martinez-mateo_demystifying_2015}. The curves cross
+at $q \approx 0.22$ ($\mathrm{SNR}\!\approx\!0.66$); beyond it LDPC wins
+($\eta = 1.14, 1.03, 1.00$ at $q = 0.30, 0.40, 0.49$ vs.\ Cascade's
+$1.40, 1.50, 1.59$), so LDPC has the leakage advantage in the expected
+low-SNR LEO region. The LDPC $\eta \to 0.996$ asymptote as $q \to 0.5$
+is not super-Shannon: $H_2(0.5) = 1$ and
+$\eta \to (M-1)/M \approx 0.996$ by construction, and this coincides
+with decoder failure (Section~\ref{subsec:results-reliability}) so the
+metric is simply uninformative there.
 
-Second, the two curves cross at $q \approx 0.22$
-($\mathrm{SNR}\!\approx\!0.66$). Beyond the crossover LDPC is the more
-efficient: $\eta = 1.14, 1.03, 1.00$ at $q = 0.30, 0.40, 0.49$
-($\mathrm{SNR}\!\approx\!0.30, 0.07, 0.001$), against $\eta = 1.40, 1.50, 1.59$
-for Cascade at the same points. The expected low-SNR LEO region sits past
-the crossover, so LDPC has the leakage advantage there.
-
-Third, the LDPC curve asymptotes to $0.996\text{--}0.999$ as $q \to 0.5$.
-This is not super-Shannon: at $q = 0.5$, $H_2(q) \to 1$ and
-$\eta \to (M-1)/M \approx 0.996$ by construction. The apparent sub-unit
-efficiency coincides with decoder failure
-(Section~\ref{subsec:results-reliability}), so the efficiency metric has
-simply become uninformative there.
-
-The three frame lengths produce visually indistinguishable efficiency curves
-except in the extreme low-BER tail, where the fractional syndrome-size
-differences $(M-1)/M$ matter. The step discontinuities in the Cascade curve
-near $q = 0.09, 0.14, 0.18, 0.25, 0.37$ correspond to Cascade-cpp's piecewise
-block-size schedule switching to a larger $k_1$
-\cite{martinez-mateo_demystifying_2015, rijsman_brunorijsmancascade-cpp_2026}.
+The three frame lengths are visually indistinguishable except in the
+extreme low-BER tail, and the Cascade step discontinuities near
+$q$ = 0.09, 0.14, 0.18, 0.25, 0.37 are Cascade-cpp block-schedule
+transitions to a larger $k_1$ \cite{martinez-mateo_demystifying_2015,
+rijsman_brunorijsmancascade-cpp_2026}.
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.80\linewidth]{experiments/graphs/results/efficiency_full.png}
-    \caption{Reconciliation efficiency $\eta$ over the full BER range.
-    Crossover at $q \approx 0.22$ ($\mathrm{SNR}\!\approx\!0.66$); LDPC
-    asymptotes to $\eta \approx 1$ but this coincides with decoder failure
-    (cf.\ Figure~\ref{fig:remaining-fer}).}
+    \includegraphics[width=1\linewidth]{experiments/graphs/results/efficiency_full.png}
+    \caption{Reconciliation efficiency $\eta$ over full BER range;
+    crossover at $q \approx 0.22$ ($\mathrm{SNR}\!\approx\!0.66$). LDPC's
+    $\eta \to 1$ asymptote coincides with decoder failure
+    (Figure~\ref{fig:remaining-fer}).}
     \label{fig:efficiency-full}
 \end{figure}
 
@@ -916,11 +1005,11 @@ block-size schedule switching to a larger $k_1$
         \caption{Low-SNR regime.}
         \label{fig:efficiency-zoom}
     \end{subfigure}
-    \caption{Zoomed views of reconciliation efficiency $\eta$ in two operating regimes. Figure~\subref{fig:efficiency-zoom-2} 
-    shows the high-SNR region ($q \le 0.10$, $\mathrm{SNR}\!\gtrsim\!2.0$), where Cascade is conventionally characterised; 
-    the LDPC curve is omitted because it remains off-scale ($\eta > 1.3$ throughout). Figure~\subref{fig:efficiency-zoom} 
-    shows the low-SNR region more relevant to the expected free-space LEO CV-QKD operating range; 
-    here Cascade is omitted because it remains off-scale ($\eta \approx 1.5\text{--}1.6$ across the window).}
+    \caption{Zoomed views of $\eta$. (a) High-SNR regime
+    ($q \le 0.10$), Cascade's conventional range; LDPC omitted as
+    off-scale ($\eta > 1.3$). (b) Low-SNR regime, the LEO CV-QKD
+    operating range; Cascade omitted as off-scale
+    ($\eta \approx 1.5\text{--}1.6$).}
     \label{fig:efficiency-zooms}
 \end{figure}
 
@@ -928,9 +1017,9 @@ block-size schedule switching to a larger $k_1$
 \subsection{Correction Reliability}
 \label{subsec:results-reliability}
 
-Correction reliability asks how often each algorithm hands back a key
-that is actually correct --- residual BER for bit-level errors
-and FER for whole-frame failures. A protocol that leaks little but
+Correction reliability asks how often each algorithm returns a correct key,
+using residual BER for bit-level errors and FER for whole-frame failures. 
+A protocol that leaks little but
 frequently returns the wrong key is useless, so this sets the limit 
 of where each algorithm can be operated.
 Figures~\ref{fig:remaining-ber} and~\ref{fig:remaining-fer} show
@@ -946,7 +1035,7 @@ parity cannot be localised by binary search, so Cascade terminates on a
 parity-consistent but incorrect key \cite{martinez-mateo_demystifying_2015}.
 Above $q \approx 0.01$, FER is $\le 10^{-4}$ throughout the measured range.
 
-LDPC shows the complementary waterfall: residual BER and FER are both zero
+LDPC, on the other hand, shows a waterfall: residual BER and FER are both zero
 for $q \le 0.38$ ($\mathrm{SNR}\!\gtrsim\!0.10$) and rise sharply above it.
 At $q = 0.45$ ($\mathrm{SNR}\!\approx\!0.017$) FER is 3.6\% ($n\!=\!1024$),
 7.4\% ($n\!=\!256$) and 8.0\% ($n\!=\!2048$); at $q = 0.49$
@@ -965,22 +1054,24 @@ expected of Min-Sum past the decoder threshold
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.95\linewidth]{experiments/graphs/results/remaining_ber.png}
-    \caption{Post-correction BER. Cascade is $\approx 0$ above $q = 0.01$;
-    LDPC shows a clean waterfall past $q \approx 0.38$
-    ($\mathrm{SNR}\!\approx\!0.10$).}
-    \label{fig:remaining-ber}
-\end{figure}
-
-\begin{figure}[!htbp]
-    \centering
-    \includegraphics[width=0.95\linewidth]{experiments/graphs/results/remaining_fer.png}
-    \caption{Post-correction frame error rate. The narrow Cascade spike below
-    $q = 0.01$ is the two-error ambiguity failure of original-variant
-    Cascade \cite{martinez-mateo_demystifying_2015}; the LDPC waterfall past
-    $q = 0.38$ is decoder-threshold behaviour
-    \cite{milicevic_quasi-cyclic_2018}.}
-    \label{fig:remaining-fer}
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{experiments/graphs/results/remaining_ber.png}
+        \caption{Residual BER: Cascade $\approx 0$ above $q = 0.01$;
+        LDPC waterfall past $q \approx 0.38$.}
+        \label{fig:remaining-ber}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{experiments/graphs/results/remaining_fer.png}
+        \caption{Residual FER: Cascade spike below $q = 0.01$ is
+        two-error ambiguity \cite{martinez-mateo_demystifying_2015};
+        LDPC waterfall past $q = 0.38$ is decoder-threshold behaviour
+        \cite{milicevic_quasi-cyclic_2018}.}
+        \label{fig:remaining-fer}
+    \end{subfigure}
+    \caption{Correction reliability: residual BER (left) and FER (right).}
+    \label{fig:reliability}
 \end{figure}
 
 \FloatBarrier
@@ -991,8 +1082,7 @@ Communication overhead is the number of classical bits exchanged for
 each reconciled key bit; this is what has to fit through the satellite's
 classical link budget in Part~II, so it is the single metric that most
 directly governs bandwidth feasibility.
-Figure~\ref{fig:recon-bits} shows reconciliation bits per key bit, the
-metric that most sharply separates the two algorithms. LDPC is flat at
+Figure~\ref{fig:recon-bits} shows reconciliation bits per key bit, which shows the difference between the two algorithms most clearly. LDPC is flat at
 $(M-1)/M$, giving 0.996, 0.999 and 0.9980 for $n = 256, 1024, 2048$,
 independent of BER because the syndrome size is fixed by the parity-check
 matrix. Cascade grows from 7.7 at $q = 0.01$ to 46.1 at $q = 0.10$
@@ -1009,7 +1099,7 @@ the bandwidth-feasibility analysis in Part~II.
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.95\linewidth]{experiments/graphs/results/recon_bits_per_key_bit.png}
+    \includegraphics[width=0.9\linewidth]{experiments/graphs/results/recon_bits_per_key_bit.png}
     \caption{Classical communication overhead per reconciled key bit. LDPC is
     effectively constant at $\approx 1$ bit/key bit; Cascade grows to $\sim\!130$
     bits/key bit at $q = 0.5$.}
@@ -1028,48 +1118,53 @@ compute is the binding constraint at the mission-relevant operating
 point.
 Figures~\ref{fig:real-time} and~\ref{fig:process-time} show wall-clock
 and CPU time per reconciled key bit on the development laptop (Apple M1
-Pro);
+Pro, macOS 15.7.3);
 the two agree within 1--2\% at every operating point, so no significant I/O
-or scheduling overhead is being captured. Both algorithms lie in
+or scheduling overhead is being captured. 
+
+Both algorithms lie in
 $1\text{--}8 \times 10^{-7}\,\mathrm{s/bit}$. Cascade is fastest per bit
 throughout, from $3\times10^{-8}\,\mathrm{s/bit}$ at $q = 0.01$ to
 $3.6\times10^{-7}$ at $q = 0.49$ ($\mathrm{SNR}\!\approx\!0.001$); LDPC sits
 at $2.0\text{--}6.5\times10^{-7}\,\mathrm{s/bit}$, with the $n\!=\!2048$
 variant cheapest at low BER but climbing sharply above $q = 0.4$
 ($\mathrm{SNR}\!\approx\!0.07$) as mean Min-Sum iterations rise from
-$\approx 3$ to $\approx 12$ (Figure~\ref{fig:iterations}). These numbers
-should not be read as ``Cascade is cheaper onboard'': they compare two
-different codebases on a general-purpose CPU, and LDPC's sparse
-belief-propagation inner loop parallelises naturally on DSPs and FPGAs
-whereas Cascade's serial binary search and sequential parity exchange do
-not. Absolute per-bit times are used in Part~II only through the three
+$\approx 3$ to $\approx 12$ (Figure~\ref{fig:iterations}).  Interestingly, up until that point, LDPC (n=2048) shows a comparable process and wall-clock time to Cascade which may be due to the larger frame size. Absolute per-bit times are used in Part~II only through the three
 compute-pace scenarios of Section~\ref{subsec:meth-compute-scenarios}.
+% tracks
+%         (a) to within 1--2\%, confirming no significant I/O or scheduling
+%         overhead.
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.95\linewidth]{experiments/graphs/results/real_time_per_bit.png}
-    \caption{Wall-clock time per reconciled key bit on a desktop-class CPU.}
-    \label{fig:real-time}
-\end{figure}
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{experiments/graphs/results/real_time_per_bit.png}
+        \caption{Wall-clock time per reconciled key bit.}
+        \label{fig:real-time}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{experiments/graphs/results/process_time_per_bit.png}
+        \caption{Process (CPU) time per reconciled key bit.}
+        \label{fig:process-time}
+    \end{subfigure}
 
-\begin{figure}[!htbp]
-    \centering
-    \includegraphics[width=0.95\linewidth]{experiments/graphs/results/process_time_per_bit.png}
-    \caption{Process (CPU) time per reconciled key bit. Tracks
-    Figure~\ref{fig:real-time} to within 1--2\%, confirming no significant
-    I/O or scheduling overhead in the measurement.}
-    \label{fig:process-time}
-\end{figure}
+    \vspace{0.3em}
 
-\begin{figure}[!htbp]
-    \centering
-    \includegraphics[width=0.95\linewidth]{experiments/graphs/results/iterations.png}
-    \caption{Mean Min-Sum iterations per LDPC frame, with the Cascade
-    reference value of 4 passes shown for comparison. The $n\!=\!2048$
-    variant's iteration count rises sharply past $q \approx 0.4$
-    ($\mathrm{SNR}\!\approx\!0.07$), driving the compute-cost increase in
-    Figure~\ref{fig:real-time}.}
-    \label{fig:iterations}
+    \begin{subfigure}[t]{0.9\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{experiments/graphs/results/iterations.png}
+        \caption{Mean Min-Sum iterations per LDPC frame (Cascade's 4 passes
+        shown for reference). The $n\!=\!2048$ rise past $q \approx 0.4$
+        drives the compute-cost increase in Figure~\ref{fig:real-time}.}
+        \label{fig:iterations}
+    \end{subfigure}
+
+    \caption{Compute cost per reconciled key bit on a desktop-class CPU
+    (Apple M1 Pro), shown as wall-clock time (top left), CPU time (top right),
+    and corresponding LDPC decoder iterations per frame (bottom).}
+    \label{fig:compute-time}
 \end{figure}
 
 \FloatBarrier
@@ -1077,7 +1172,7 @@ compute-pace scenarios of Section~\ref{subsec:meth-compute-scenarios}.
 \label{subsec:results-interaction}
 
 Interaction cost is the number of sequential round-trips a frame
-requires. LDPC needs one by construction, Cascade many, and each
+requires. LDPC needs one by construction --- Cascade many --- and each
 round-trip costs one $\tau$ of link latency in Part~II --- so this is
 the metric that decides whether Cascade stays within the classical
 window under a given link.
@@ -1096,11 +1191,11 @@ frame and LDPC pays it once.
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.95\linewidth]{experiments/graphs/results/Cascade_messages.png}
-    \caption{Cascade sequential parity-request messages per reconciliation.
-    Saw-tooth discontinuities mark block-schedule transitions in Cascade-cpp
-    \cite{rijsman_brunorijsmancascade-cpp_2026}. LDPC is structurally one
-    message per frame and is not shown.}
+    \includegraphics[width=0.9\linewidth]{experiments/graphs/results/Cascade_messages.png}
+    \caption{Cascade sequential parity-request messages per
+    reconciliation; saw-tooth steps mark Cascade-cpp block-schedule
+    transitions \cite{rijsman_brunorijsmancascade-cpp_2026}. LDPC is
+    one message per frame and not shown.}
     \label{fig:Cascade-messages}
 \end{figure}
 
@@ -1109,7 +1204,14 @@ frame and LDPC pays it once.
 \label{subsec:results-synthesis}
 
 Table~\ref{tab:results-synthesis} summarises the five Part~I metrics at three
-representative operating points covering the measured range.
+representative operating points covering the measured range. The LDPC
+column shows the $n{=}1024$ (\texttt{1024x1023\_z1}) variant as a
+middle-of-the-range representative: its syndrome rate $0.999$ is visibly
+distinct from the $n{=}256$ and $n{=}2048$ variants, but its efficiency,
+reliability, and timing curves track them closely
+(Figures~\ref{fig:efficiency-full}--\ref{fig:iterations}), and it is the
+same variant carried into the Part~II workload, bandwidth, compute, and
+feasibility-matrix analyses.
 
 \begin{table}[H]
     \centering
@@ -1160,8 +1262,7 @@ Three quantitative conclusions follow, each an input to Part~II:
 \begin{enumerate}
     \item \textbf{Efficiency crossover at $q \approx 0.22$
         ($\mathrm{SNR}\!\approx\!0.66$).} LDPC holds the leakage advantage in
-        the LEO-relevant regime; the ``Cascade is close to Shannon'' narrative
-        applies only to the low-BER end.
+        the LEO-relevant regime; Cascade is close to Shannon limit only in the low-BER end.
     \item \textbf{Classical-volume ratio $10^{1}\text{--}10^{2}$ in LDPC's
         favour.} Even at $q = 0.10$ ($\mathrm{SNR}\!\approx\!2.0$), Cascade
         discloses $\approx 47$ bits per reconciled bit against LDPC's
@@ -1177,7 +1278,7 @@ higher per-bit CPU time than Cascade on the test machine at low-to-moderate
 BER. Working against Cascade: a non-zero undetected-error rate in the
 very-low-BER regime, intrinsic to the original 4-pass variant
 \cite{martinez-mateo_demystifying_2015}. Neither failure mode is fatal, but
-both must be carried into the system-level model.
+both are carried into the system-level model.
 
 \section{Part II: Feasibility Analysis}
 \label{sec:results-part2}
@@ -1219,8 +1320,9 @@ counted.
         100\,MHz & $1.2\!\times\!10^{10}$ & 48   & $1.2\!\times\!10^{7}$ & $1.2\!\times\!10^{6}$\\
         \bottomrule
     \end{tabular}
-    \caption{Per-pass workload for $T_q = 120$\,s and $b_{\text{sym}} = 4$\,B.
-    $N$ is raw samples (treated as key bits post-8D). LDPC and Cascade columns show the number of frames needed per sample per pass. }
+    \caption{Per-pass workload for $T_q = 120$\,s, $b_{\text{sym}} = 4$\,B.
+    $N$ is raw samples ($\equiv$ key bits post-8D); last two columns give
+    frames per pass.}
     \label{tab:part2-workload}
 \end{table}
 
@@ -1266,7 +1368,7 @@ of magnitude (Section~\ref{subsec:results-overhead}).
 
 Latency feasibility asks whether Cascade's sequential round-trips can
 complete inside the classical window; this is where the
-``many-messages-per-frame'' result from Part~I turns into pass/fail on
+many-messages-per-frame result from Part~I turns into pass/fail on
 a given link. LDPC is insensitive to $\tau$ so only Cascade is stressed
 here.
 Cascade's per-frame sequential message count at $q = 0.40$
@@ -1304,12 +1406,13 @@ frame-level parallelism can be sustained on flight hardware.
 \label{subsec:results-compute-feasibility}
 
 Compute feasibility asks whether the onboard processor can finish
-reconciling a full pass before the key is needed downstream. It is the
-constraint where LDPC's regular, parallelisable inner loop is most
-likely to bind on a CPU-only platform.
-Using the Part~I per-bit timings at $q = 0.40$
-($\mathrm{SNR}\!\approx\!0.07$): $\approx 5\!\times\!10^{-7}$\,s/bit (LDPC)
-and $\approx 3\!\times\!10^{-7}$\,s/bit (Cascade), with
+reconciling a pass before the next classical communication opportunity
+arrives, or whether the key has to be deferred over multiple orbits.
+It is the constraint where LDPC's regular, parallelisable inner loop is
+most likely to bind on a CPU-only platform. Using the Part~I per-bit
+timings at $q = 0.40$ ($\mathrm{SNR}\!\approx\!0.07$):
+$\approx 5\!\times\!10^{-7}$\,s/bit (LDPC) and
+$\approx 3\!\times\!10^{-7}$\,s/bit (Cascade), with
 $T_{\text{compute}} = N \cdot t$.
 
 \begin{table}[H]
@@ -1332,15 +1435,19 @@ $T_{\text{compute}} = N \cdot t$.
     \label{tab:part2-compute}
 \end{table}
 
-At nominal pace LDPC already exceeds $T_{\text{RF}} = 300$\,s at 10\,MHz and
-needs multi-orbit deferral at 100\,MHz. The slow scenario pushes both
-algorithms beyond the post-pass window at 10\,MHz and beyond the 24\,h
-inter-orbit budget at 100\,MHz. The accelerated scenario restores LDPC to
-within the RF window up to 10\,MHz, the regime in which FPGA- or DSP-assisted
-belief-propagation is worth investigating. Compute is therefore the dominant
-constraint for LDPC whenever a key must be delivered within a single
-post-pass window; the natural mitigations are multi-orbit deferral (accepting
-a delayed key) or hardware acceleration of the LDPC inner loop
+At nominal pace both algorithms fit the 90\,min inter-pass window up to
+10\,MHz (LDPC 600\,s, Cascade 360\,s $\ll$ 5400\,s), so the key can be
+released at the very next RF opportunity. At 100\,MHz only Cascade still
+fits (3600\,s $<$ 5400\,s); LDPC's 6000\,s overruns the 90\,min budget
+and needs multi-orbit deferral, though it comfortably closes within 24\,h.
+The slow scenario pushes LDPC beyond 90\,min from 10\,MHz upwards and
+beyond the 24\,h inter-orbit budget at 100\,MHz, while the accelerated
+scenario puts LDPC back inside 90\,min across all three source rates,
+the regime in which FPGA- or DSP-assisted belief propagation is worth
+investigating. Compute is therefore the dominant constraint for LDPC at
+high source rate on generic CPU-only hardware; the natural mitigations
+are one-orbit deferral (accepting a key delayed by a single RF pass) or
+hardware acceleration of the LDPC inner loop
 (Section~\ref{subsec:results-compute}).
 
 \subsection{Feasibility Summary}
@@ -1368,27 +1475,30 @@ Section~\ref{sec:future-work}).
         Bandwidth, optical (30\,Gbit)     & \checkmark & \checkmark & \checkmark & \checkmark & --        & --\\
         Latency, pipelined (any $\tau$)   & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark\\
         Latency, serial RF ($\tau{=}0.5$\,s) & \checkmark & \checkmark & \checkmark & --        & --        & --\\
-        Compute, nominal, 300\,s window   & \checkmark & --        & --        & \checkmark & --        & --\\
+        Compute, nominal, 90\,min window  & \checkmark & \checkmark & --        & \checkmark & \checkmark & \checkmark\\
         Compute, nominal, 24\,h window    & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark\\
         \bottomrule
     \end{tabular}
     \caption{Pass (\checkmark) / fail (--) feasibility summary at
-    $q = 0.40$ ($\mathrm{SNR}\!\approx\!0.07$). RF capacity uses X-band
-    50\,Mbps $\times$ 300\,s; optical uses 1\,Gbps $\times$ 30\,s. LDPC has
-    $N_{\text{seq}} = 1$ and is therefore independent of both the
-    pipelined/serial distinction and the choice of $\tau$.}
+    $q = 0.40$ ($\mathrm{SNR}\!\approx\!0.07$), LDPC variant $n{=}1024$.
+    Bandwidth is evaluated per pass (RF $= 50$\,Mbps\,$\times$\,300\,s;
+    optical $= 1$\,Gbps\,$\times$\,30\,s); compute is evaluated against
+    the inter-pass RF cadence (90\,min) or the multi-orbit budget
+    (24\,h). LDPC has $N_{\text{seq}} = 1$ and is therefore
+    $\tau$-independent.}
     \label{tab:part2-matrix}
 \end{table}
 
 Three observations follow from Table~\ref{tab:part2-matrix}:
 \begin{enumerate}
-    \item \textbf{LDPC is compute-bound.} All bandwidth and latency
-    criteria pass; only compute pressures the short classical window.
-    This can be relaxed either by multi-orbit deferral or, potentially,
-    by hardware acceleration.
+    \item \textbf{LDPC is compute-bound mainly at high source rate.} At 2\,MHz it
+    fits inside a single 90\,min inter-pass window for all compute paces. At
+    10\,MHz it fits for the accelerated and nominal paces but overruns slightly in
+    the slow scenario. At 100\,MHz nominal compute overruns the 90\,min window but
+    still closes inside the 24\,h budget, so the key is delayed rather than lost.
     \item \textbf{Cascade is communication- and latency-bound.}
     Bandwidth fails on RF at every source rate and on optical from
-    10\,MHz upwards. Latency fails the serial bound on any realistic RF
+    10\,MHz upwards; latency fails the serial bound on any realistic RF
     link.
     \item \textbf{Link choice matters more for Cascade than for LDPC.}
     Moving from RF to optical does not change LDPC's feasibility, but
@@ -1398,18 +1508,21 @@ Three observations follow from Table~\ref{tab:part2-matrix}:
 
 The \emph{kind} of failure matters more than the fact of it. At 10\,MHz
 with an RF classical link at nominal compute pace, both algorithms
-exceed the 300\,s post-pass window, but the dominant term of
+finish compute well inside the 90\,min inter-pass window ($600$\,s for
+LDPC and $360$\,s for Cascade), but the dominant term of
 $T_{\text{total}} = T_{\text{compute}} + T_{\text{tx}} +
-T_{\text{latency}}$ (Section~\ref{subsec:meth-time-model}) is different.
-LDPC's $\approx\!624$\,s is compute-dominated ($600$\,s compute,
-$24$\,s to stream $1.2$\,Gbit over $50$\,Mbps, zero latency because
-$N_{\text{seq}}=1$), while Cascade's $\approx\!3190$\,s is
-transmission-dominated ($\sim\!47$\,min just to push $141$\,Gbit over
-the same link). In mission-design terms, LDPC's overrun is a deferrable
-backlog: one extra orbit clears it on the same hardware. Cascade's is a
-link-class deficit: no amount of deferral on the RF link delivers a
-key, so the choice is between upgrading the classical channel and
-lowering the source rate.
+T_{\text{latency}}$ (Section~\ref{subsec:meth-time-model}) then splits
+the two. LDPC needs only $\sim 24$\,s to stream its $1.2$\,Gbit
+syndrome at $50$\,Mbps and has no repeated round-trip latency, so the whole pipeline fits inside one 300\,s RF
+pass and the key is released at the very next opportunity. Cascade, by
+contrast, has to push $\sim 141$\,Gbit at the same $50$\,Mbps, which
+amounts to $\sim 47$\,min of pure transmission time --- roughly ten
+consecutive 300\,s RF passes, spanning $\sim 13$\,h of wall-clock time
+before the last parity round-trip closes. LDPC's worst case is a
+one-orbit delay that the 24\,h budget absorbs on the same hardware;
+Cascade's is a link-class deficit that no amount of deferral on the RF
+link resolves, leaving a choice between upgrading the classical channel
+and lowering the source rate.
 
 LDPC is the stronger candidate under an RF classical link or at the
 expected low SNR, while Cascade is only plausible alongside a
@@ -1423,6 +1536,12 @@ out of scope (limitations, Section~
 
 \section{Discussion}
 \label{sec:discussion}
+
+% Potentially add this: These numbers
+% should not be read as ``Cascade is cheaper onboard'': they compare two
+% different codebases on a general-purpose CPU, and LDPC's sparse
+% belief-propagation inner loop parallelises naturally on DSPs and FPGAs
+% whereas Cascade's serial binary search and sequential parity exchange do not.
 
 LDPC wins the expected LEO CubeSat regime (low SNR,
 RF or mixed classical link); Cascade only wins in the narrow corner of
@@ -1452,8 +1571,8 @@ Because the expected low-SNR LEO region sits past the Part~I efficiency
 crossover, the leakage conclusion from Part~I and the feasibility
 conclusion from Part~II agree. The two practical implications for
 mission design are that reconciliation strategy and classical-link
-choice should be co-designed --- RF-only missions plan on LDPC,
-optical-classical missions preserve both options --- and that onboard
+choice should be co-designed --- RF-constrained missions favour LDPC under this abstraction,
+while optical-classical missions preserve both options --- and that onboard
 compute, not bandwidth, is the realistic bottleneck for LDPC, so the
 compute budget and the in-pass vs.\ cross-orbit completion policy
 should be fixed at mission definition.
@@ -1461,56 +1580,49 @@ should be fixed at mission definition.
 \section{Limitations}
 \label{sec:limitations}
 
-The study is first-order: fixed-SNR operating points rather than a dynamic
-pass-level optical simulation, BER alignment rather than a shared internal
-CV-QKD channel for Cascade, analytical latency rather than a network
-emulator, and timings on development hardware rather than flight hardware.
-It is also an error-correction feasibility study, not a security study:
-leakage and the post-privacy-amplification secret-key rate are out of scope,
-so a protocol that corrects every bit may still be cryptographically
-unusable if it leaks too much. The LDPC conclusions --- including the
-$q \approx 0.22$ ($\mathrm{SNR}\!\approx\!0.66$) crossover --- are tied to
-the three fixed quasi-cyclic matrices tested and would shift for
-rate-adaptive, blind, or alternatively lifted codes; Cascade is similarly
-evaluated only in its original 4-pass variant.
+The study is first-order throughout: fixed-SNR operating points rather than
+a dynamic pass-level optical simulation, BER alignment rather than a shared
+internal CV-QKD channel for Cascade, analytical latency rather than a
+network emulator, and timings on development hardware rather than flight
+hardware. It is an error-correction feasibility study, not a security
+study: leakage and the post-privacy-amplification secret-key rate are out
+of scope, so a protocol that corrects every bit may still be
+cryptographically unusable if it leaks too much.
 
-Four further first-order assumptions in the Part~II feasibility model are
-worth naming explicitly. \emph{(i) Symmetric RF link.} The RF bandwidth
-check treats ``the RF link'' as a single 50\,Mbps X-band downlink, but
-SPOQC's classical architecture is asymmetric: the X-band downlink is
-$\sim$50\,Mbps, whereas the S-band uplink is around 76.8\,kbps, roughly
-650$\times$ narrower \cite{noauthor_hubs_nodate}. Under reverse
-reconciliation, Bob (ground) sends the LDPC syndrome and Cascade parity
-requests upward, so the uplink is the genuine bottleneck for both
-algorithms; a realistic traffic-directional analysis would tighten every
-``RF-feasible'' entry in the feasibility matrix and is left as future work.
-\emph{(ii) Compute platform.} Both Part~I timings were produced by
-       scalar, single-threaded reference implementations running on one
-       performance core of an Apple M1 Pro, with no GPU or Neural Engine; 
-       this penalises LDPC more than Cascade because
-       Min-Sum belief propagation is highly parallel whereas Cascade is
-       inherently serial, so the reported LDPC/Cascade compute gap is a
-       conservative upper bound on LDPC's real deployment cost. The
-       $10\times$ ``slow'' scenario is a rough stand-in for a space-grade
-       single-board computer rather than a measured benchmark on flight
-       hardware. \emph{(iii) Time-of-pass dynamics.} The first-order
-model defines $T_{\text{total}} = T_{\text{compute}} + T_{\text{tx}} +
-T_{\text{latency}}$ and evaluates each term against a single post-pass
-window, without scheduling multiple passes per day, computing how many
-orbits of classical downlink are needed to deliver a key, or modelling
-the gaps between passes. Where the compute or bandwidth term exceeds the
-300\,s post-pass window, the model falls back to the 24\,h inter-orbit
-budget as an upper bound rather than computing the exact number of
-deferred orbits. \emph{(iv) Memory model.} The buffered-sample estimate
-uses 4\,B per symbol (32-bit float) as a conservative upper bound on the
-soft-sample representation, and does not include rotation metadata,
-syndrome storage, or the double-buffering that a real pipeline would
-require.
+The specific caveats group under three headings. \emph{Algorithm scope.}
+The LDPC results --- including the $q \approx 0.22$
+($\mathrm{SNR}\!\approx\!0.66$) crossover --- are tied to the three fixed
+quasi-cyclic matrices tested and would shift for rate-adaptive, blind or
+alternatively lifted codes, or for other one-way families such as rateless
+spinal codes \cite{wen_novel_2019}; Cascade is evaluated only in its
+original 4-pass variant, so reduced-leakage refinements
+\cite{pacher_information_2015} are not captured.
+\emph{Compute platform.} Both Part~I timings were produced by scalar,
+single-threaded reference implementations on one performance core of an
+Apple M1 Pro, with no GPU, Neural Engine or explicit SIMD; this penalises
+LDPC more than Cascade because Min-Sum belief propagation is highly
+parallel whereas Cascade is inherently serial, so the reported
+LDPC/Cascade compute gap is a conservative upper bound on LDPC's real
+deployment cost. The $10\times$ ``slow'' scenario is a placeholder for a
+space-grade single-board computer rather than a flight-hardware benchmark.
+\emph{Feasibility model.} The RF bandwidth check treats ``the RF link''
+as a single 50\,Mbps X-band downlink, but SPOQC's classical architecture
+is asymmetric (X-band downlink $\sim$50\,Mbps, S-band uplink
+$\sim$76.8\,kbps, roughly 650$\times$ narrower
+\cite{noauthor_hubs_nodate}), and under reverse reconciliation the uplink
+is the true bottleneck for both algorithms. The time model
+$T_{\text{total}} = T_{\text{compute}} + T_{\text{tx}} + T_{\text{latency}}$
+is evaluated against a 90\,min inter-pass window with a 24\,h
+multi-orbit fallback, rather than scheduling exact deferred orbits or
+modelling the gaps between high-quality passes explicitly. The buffered-sample estimate uses 4\,B per symbol as a
+conservative soft-sample upper bound and does not include rotation
+metadata, syndrome storage, or double-buffering.
 
 None of these caveats invalidate the qualitative conclusions --- LDPC
-compute-bound, Cascade communication- and latency-bound --- but the
-matrix entries are better read as ``closes to first order'' than as
-precise mission budgets.
+compute-bound, Cascade communication- and latency-bound --- but the matrix
+entries are better read as ``closes to first order'' than as precise
+mission budgets. The corresponding follow-ups are collected in
+Section~\ref{sec:future-work}.
 
 \chapter{Conclusions and Future Work}
 \label{cha:conclusion}
@@ -1526,12 +1638,11 @@ leaks, how reliable each is, how fast each runs, and how many round-trips
 each needs. Part~II placed those measurements inside a simple model of
 a real satellite pass --- finite time over a ground station, a finite
 classical link, finite onboard compute and memory --- and asked which
-combinations actually close.
+combinations actually succeed.
 
-Under the radio-frequency classical link
-that a CubeSat of this class is most likely to fly with, and in the
-low-SNR regime that a free-space link spends most of its time in,
-LDPC is the stronger choice: its classical traffic and round-trip
+Under the simplified RF-link abstraction used in this study, and in the
+low-SNR regime expected for a free-space LEO link, LDPC is the stronger
+choice: its classical traffic and round-trip
 count are small and fixed, so the only pressure left is onboard
 compute, which can be absorbed either by processing across orbits or
 by investigating hardware acceleration of the decoder. Cascade remains
@@ -1562,25 +1673,47 @@ bottleneck identified here can be quantified rather than bounded.
 \section{Future Work}
 \label{sec:future-work}
 
-Three extensions follow directly from this scope. 
+Five extensions follow directly from the scope chosen in
+Section~\ref{sec:limitations}.
 
-\textbf{End-to-end
-secret-key rate}: combine Part~I leakage with privacy amplification and a
-channel model to verify positivity of the final key. 
+\textbf{End-to-end secret-key rate.} Combine the Part~I leakage measurements
+with privacy amplification and a CV-QKD channel model (transmittance,
+excess noise, finite-size effects) to verify that the final key rate is
+strictly positive. This is the single most important step before either
+algorithm can be recommended for flight, as it determines whether an algorithm can actually be used to generate a secret key.
 
-\textbf{Flight-hardware
-benchmarking}: replace the generic compute-pace scenarios with measured
-timings on a space-grade processor such as the Q8 Xiphos used on SPOQC, and
-investigate whether FPGA or DSP offload of the LDPC inner loop can realise
-the accelerated scenario in practice. 
+\textbf{Flight-hardware benchmarking.} Replace the generic compute-pace
+scenarios with measured timings on a space-grade processor such as the Q8
+Xiphos used on SPOQC, and investigate whether FPGA or DSP offload of the
+LDPC inner loop (sparse belief propagation parallelises naturally across
+check and variable nodes) can realise the accelerated scenario in
+practice. The same benchmark would also tighten the compute column of
+Table~\ref{tab:part2-matrix}, whose current $10\times$ ``slow'' factor is
+a placeholder rather than a measurement.
 
-\textbf{Dynamic channel model and
-protocol variants}: replace fixed-SNR analysis with an elevation-dependent
-pass simulation, and extend the comparison to rate-adaptive LDPC and
-alternative Cascade variants --- for example BICONF (an extension that
-confirms reconciliation with additional randomised parity checks) --- 
-to see whether the regime in which Cascade is preferable
-widens.
+\textbf{Asymmetric-link traffic model.} Resolve the RF feasibility check
+into the two SPOQC carriers rather than treating the link as symmetric:
+under reverse reconciliation the S-band uplink ($\sim$76.8\,kbps) carries
+the LDPC syndrome and the Cascade parity requests, while the X-band
+downlink ($\sim$50\,Mbps) carries the Cascade parity replies. A full
+directional analysis would re-cost every ``RF-feasible'' entry in
+Table~\ref{tab:part2-matrix} and is likely to tighten them significantly
+for both algorithms.
+
+\textbf{Time-of-pass scheduling.} Replace the 90\,min / 24\,h window
+pair with an explicit multi-pass scheduler that counts how many orbits
+of classical downlink are needed to deliver a key once compute or
+bandwidth overruns the 90\,min inter-pass window, and that models the
+gaps between high-quality passes.
+
+\textbf{Dynamic channel model and protocol variants.} Replace fixed-SNR
+analysis with an elevation-dependent pass simulation, and extend the
+comparison to rate-adaptive or blind LDPC, to reduced-leakage Cascade
+refinements such as Pacher et al.'s feedback protocol with power-of-two
+parity weights \cite{pacher_information_2015}, and to alternative one-way
+code families such as rateless spinal codes \cite{wen_novel_2019}, to see
+whether the regime in which Cascade is preferable widens or narrows.
+
 
 \appendix
 
@@ -1633,16 +1766,15 @@ Section~\ref{subsec:meth-verification}.
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.78\linewidth]{experiments/graphs/verification/actual_bit_error_rate.png}
-    \caption{Measured pre-correction BER alignment used in the matched-condition
-    LDPC/Cascade comparison. Agreement supports the correctness of the
-    alignment independently of the reconciliation algorithms themselves.}
+    \includegraphics[width=0.7\linewidth]{experiments/graphs/verification/actual_bit_error_rate.png}
+    \caption{Measured pre-correction BER alignment between LDPC and
+    Cascade inputs, confirming the matched-condition setup.}
     \label{fig:ber_alignment_appendix}
 \end{figure}
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.78\linewidth]{experiments/graphs/results/snr_vs_ber.png}
+    \includegraphics[width=0.7\linewidth]{experiments/graphs/results/snr_vs_ber.png}
     \caption{SNR vs.\ measured pre-correction BER, with the BPSK reference
     $\tfrac{1}{2}\mathrm{erfc}(\sqrt{\mathrm{SNR}})$ overlaid. The gap between
     the two curves is the effect of the 8D multidimensional-reconciliation

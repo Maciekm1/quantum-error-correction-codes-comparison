@@ -75,6 +75,28 @@
 \usepackage{tabularx}
 \usepackage{booktabs}
 \usepackage{array}
+\usepackage{enumitem}
+\setlist{
+  itemsep=2pt,
+  topsep=4pt,
+  parsep=0pt,
+  partopsep=0pt
+}
+% Reduce heading spacing only; keep official paragraph spacing unchanged
+\RedeclareSectionCommand[
+  beforeskip=1.2ex plus .2ex minus .2ex,
+  afterskip=0.6ex plus .1ex
+]{section}
+
+\RedeclareSectionCommand[
+  beforeskip=1.0ex plus .2ex minus .2ex,
+  afterskip=0.4ex plus .1ex
+]{subsection}
+
+\RedeclareSectionCommand[
+  beforeskip=0.8ex plus .2ex minus .2ex,
+  afterskip=0.3ex plus .1ex
+]{subsubsection}
 
 \lstdefinestyle{appendixcode}{
   basicstyle=\ttfamily\small,
