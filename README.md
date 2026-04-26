@@ -27,13 +27,11 @@ This repository supports a simulation and systems study comparing **one-way quas
 ## Table of contents
 
 - [Repository layout](#repository-layout)
-- [Prerequisites](#prerequisites)
-- [Running LDPC experiments](#running-ldpc-experiments)
-- [Running Cascade experiments](#running-cascade-experiments)
-- [Analysis and figures](#analysis-and-figures)
-- [Implementation contribution: LDPC statistics tracking](#implementation-contribution-ldpc-statistics-tracking)
+- [Prerequisites & running](#prerequisites--running)
+- [Sample figures](#sample-figures)
+- [Analysis](#analysis)
+- [LDPC statistics tracking](#ldpc-statistics-tracking)
 - [Upstream and mission context](#upstream-and-mission-context)
-- [Citation](#citation)
 
 ---
 
@@ -50,119 +48,61 @@ This repository supports a simulation and systems study comparing **one-way quas
 
 ---
 
-## Prerequisites
+## Prerequisites & running
 
-**LDPC (`cvqkd-reconciliation`)**
+| Piece | Need |
+|--------|------|
+| **LDPC** | CMake ≥ 3.10, C11 (`clang`/`gcc`) |
+| **Cascade** | C++17 `clang++`, Boost (`program_options`, `filesystem`), pthread; GTest for `make test`. Apple Silicon: Homebrew paths in [`cascade-cpp/Makefile`](cascade-cpp/Makefile). |
+| **Python** | [uv](https://docs.astral.sh/uv/), Python ≥ 3.12 ([`pyproject.toml`](pyproject.toml) / [`uv.lock`](uv.lock)) |
 
-- CMake ≥ 3.10, a C11 toolchain (`clang` or `gcc`), and `make` or Ninja.
+**LDPC** (from repository root)
 
-**Cascade (`cascade-cpp`)**
+```bash
+cmake -S cvqkd-reconciliation -B cvqkd-reconciliation/build && cmake --build cvqkd-reconciliation/build
+# optional single point: cvqkd-reconciliation/build/ldpc_experiment 0.07 123 10000 cvqkd-reconciliation/data/B_matrices/1024x1023_z1.coo 8
 
-- `clang++` with **C++17**, **pthread**, **GoogleTest** (for `make test`), and **Boost** (`program_options`, `filesystem`).
-- On Apple Silicon, the bundled `Makefile` expects Homebrew headers/libs under `/opt/homebrew` (see comments in [`cascade-cpp/Makefile`](cascade-cpp/Makefile)).
+uv sync && uv run python experiments/scripts/run_sweep.py experiments/config/sweep_snr_ldpc.yaml
+```
 
-**Python (experiments + notebooks)**
+[`ldpc_experiment`](cvqkd-reconciliation/src/examples/ldpc_experiment.c) writes one **NDJSON** line per (matrix, SNR) into the run’s output dir; YAML keys: `ldpc.binary`, `b_matrices`, `snr` / `snr_points`, `frames_per_point`, `output.raw_dir`.
 
-- **[uv](https://docs.astral.sh/uv/)** package manager; dependencies are declared in [`pyproject.toml`](pyproject.toml) and locked in [`uv.lock`](uv.lock) (Python **≥ 3.12**, including PyYAML and notebook stack).
+**Cascade** (from repository root)
+
+```bash
+cd cascade-cpp && make bin/run_experiments && mkdir -p study/data/dissertation && \
+  ./bin/run_experiments study/experiments_papers_ec_compare.json --output-dir study/data/dissertation
+```
+
+JSON schema: [`cascade-cpp/README.md`](cascade-cpp/README.md). Upstream full suite: `make data-papers`.
 
 ---
 
-## Running LDPC experiments
+## Sample figures
 
-### 1. Build `ldpc_experiment`
+Part I outputs under [`experiments/graphs/results/`](experiments/graphs/results/) (regenerate via [`part_1_results.ipynb`](experiments/scripts/part_1_results.ipynb)).
 
-From the **repository root**:
+| Reconciliation efficiency η (matched pre-correction BER) | Classical bits per reconciled key bit |
+|:---:|:---:|
+| ![Efficiency vs BER](experiments/graphs/results/efficiency_full.png) | ![Bits per key bit](experiments/graphs/results/recon_bits_per_key_bit.png) |
 
-```bash
-cd cvqkd-reconciliation
-cmake -S . -B build
-cmake --build build
-```
+| Residual BER after correction | Cascade sequential parity messages per frame |
+|:---:|:---:|
+| ![Residual BER](experiments/graphs/results/remaining_ber.png) | ![Cascade messages](experiments/graphs/results/cascade_messages.png) |
 
-The executable is **`build/ldpc_experiment`**. It implements the unified CV-QKD-style path (Gaussian samples → AWGN at chosen SNR → 8D reconciliation → syndrome → Min–Sum decode) and appends **one NDJSON summary line** per invocation to `results.ndjson` in the **current working directory** (used by the sweep runner).
-
-**Manual invocation** (arguments: SNR, seed, frames, path to `.coo` B-matrix, QKD dimension):
-
-```bash
-cd cvqkd-reconciliation/build
-./ldpc_experiment 0.07 123 10000 ../data/B_matrices/1024x1023_z1.coo 8
-```
-
-### 2. Run a full SNR sweep with `run_sweep.py`
-
-The runner reads a YAML file, loops over SNR values and B-matrices, runs the binary with `cwd` set to the output directory, then renames the merged file.
-
-```bash
-# From repository root - install locked deps into .venv
-uv sync
-
-uv run python experiments/scripts/run_sweep.py experiments/config/sweep_snr_ldpc.yaml
-```
-
-Edit [`experiments/config/sweep_snr_ldpc.yaml`](experiments/config/sweep_snr_ldpc.yaml) to set:
-
-- `ldpc.binary` — path to `ldpc_experiment` (default: `cvqkd-reconciliation/build/ldpc_experiment`)
-- `ldpc.b_matrices` — e.g. `256x255_z1.coo`, `512x511_z4.coo`, `1024x1023_z1.coo`
-- `snr` geometric range or `snr_points` list
-- `frames_per_point`, `seed`, `output.raw_dir`, `experiment_name`
-
-Raw NDJSON lands under `experiments/data/raw/` (or your configured `raw_dir`).
+More plots in the same folder (e.g. FER, timings, SNR–BER mapping, zooms).
 
 ---
 
-## Running Cascade experiments
+## Analysis
 
-Cascade sweeps are defined by a **JSON experiment specification** consumed by **`bin/run_experiments`** (multi-threaded driver). See [`cascade-cpp/README.md`](cascade-cpp/README.md) for the full schema.
-
-### 1. Build the driver
-
-```bash
-cd cascade-cpp
-make bin/run_experiments
-```
-
-### 2. Run the sweep
-
-This repository includes a narrowed spec (original 4-pass algorithm, 10 000-bit keys, wide BSC error-rate grid, 10 000 runs per point) in:
-
-**`cascade-cpp/study/experiments_papers_ec_compare.json`**
-
-```bash
-cd cascade-cpp
-mkdir -p study/data/dissertation
-
-./bin/run_experiments study/experiments_papers_ec_compare.json --output-dir study/data/dissertation
-```
-
-Optional flags (see `run_experiments --help`): `--seed N`, `--max-runs K`, `--disable-multi-processing`.
-
-Outputs are **JSON data files** (one per algorithm / key-size / sweep type), suitable for plotting or for alignment with LDPC NDJSON via shared metrics (efficiency, BER, parity traffic, timings).
-
-Equivalent upstream target (full *papers* suite, different JSON path):
-
-```bash
-make data-papers   # uses study/experiments_papers.json → study/data/papers
-```
+[`experiments/scripts/part_1_results.ipynb`](experiments/scripts/part_1_results.ipynb) — Part I plots and tables. Use the `.venv` from `uv sync` (or `uv run …`).
 
 ---
 
-## Analysis and figures
+## LDPC statistics tracking
 
-- **Part I:** [`experiments/scripts/part_1_results.ipynb`](experiments/scripts/part_1_results.ipynb) — efficiency, residual BER/FER, overhead, timings, Cascade message counts.
-
-Run `uv sync` once, then select the project **`.venv`** as the notebook kernel (or prefix commands with **`uv run`**). Regenerate graphs after updating raw data paths inside the notebooks.
-
----
-
-## Implementation contribution: LDPC statistics tracking
-
-A main **software contribution** of this work is a **statistics-tracking layer** in the internal SPOQC **`cvqkd-reconciliation`** codebase (C), integrated with the **`ldpc_experiment`** entry point in [`cvqkd-reconciliation/src/examples/ldpc_experiment.c`](cvqkd-reconciliation/src/examples/ldpc_experiment.c):
-
-1. **Structured output** — Each completed (matrix, SNR) aggregate is serialized as **newline-delimited JSON (NDJSON)** so downstream tools can stream-parse results like Cascade’s experiment outputs.
-2. **Schema alignment** — Field names and semantics (efficiency, reconciliation bits, per-key-bit overhead, timings, iteration counts, pre/post BER, FER, etc.) were chosen to **mirror `cascade-cpp`’s experiment records** so **one Python analysis pipeline** can treat both algorithms uniformly.
-3. **Online aggregation** — Per-frame metrics feed **Welford’s algorithm** in [`cvqkd-reconciliation/src/qkd_stats.c`](cvqkd-reconciliation/src/qkd_stats.c) (via `QKDAggregateStats` / `qkd_stats_add_frame`) for **numerically stable running means and sample standard deviations** over thousands of frames **without storing every trial**.
-
-Efficiency is computed compatibly with the Shannon reference for a BSC using the measured pre-correction BER per aggregate, matching the dissertation’s Part I definitions.
+[`cvqkd-reconciliation`](cvqkd-reconciliation/) gained **NDJSON stats** from each `ldpc_experiment` run, with fields aligned to **`cascade-cpp`** experiment JSON so one analysis path covers both codes. Per-frame values are aggregated with **Welford’s method** in [`qkd_stats.c`](cvqkd-reconciliation/src/qkd_stats.c) (stable mean/σ without storing every trial). Efficiency uses the same Shannon/BSC definition as Cascade, from measured pre-correction BER.
 
 ---
 
